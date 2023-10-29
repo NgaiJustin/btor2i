@@ -1,2 +1,0 @@
-- setup github PR checks for rust formatting and clippy
-- setup github PR checks for rust tests
