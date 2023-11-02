@@ -6,7 +6,7 @@ use clap::Parser;
 pub struct CLI {
   /// The BTOR2 file to run. stdin is assumed if file is not provided
   #[arg(short, long, action)]
-  pub file: String,
+  pub file: Option<String>,
 
   /// Arguments for the main function
   #[arg(action)]
