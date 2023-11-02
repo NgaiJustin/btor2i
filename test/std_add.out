@@ -1,0 +1,10 @@
+1
+Btor2Line { id: 1, lineno: 2, name: "sort", tag: Sort, sort: Btor2Sort { id: 1, tag: Bitvec, name: Some("bitvec"), content: Bitvec { width: 32 } }, init: 0, next: 0, constant: None, symbol: None, args: [] }
+2
+Btor2Line { id: 2, lineno: 3, name: "input", tag: Input, sort: Btor2Sort { id: 1, tag: Bitvec, name: Some("bitvec"), content: Bitvec { width: 32 } }, init: 0, next: 0, constant: None, symbol: Some("left"), args: [] }
+3
+Btor2Line { id: 3, lineno: 4, name: "input", tag: Input, sort: Btor2Sort { id: 1, tag: Bitvec, name: Some("bitvec"), content: Bitvec { width: 32 } }, init: 0, next: 0, constant: None, symbol: Some("right"), args: [] }
+4
+Btor2Line { id: 4, lineno: 5, name: "add", tag: Add, sort: Btor2Sort { id: 1, tag: Bitvec, name: Some("bitvec"), content: Bitvec { width: 32 } }, init: 0, next: 0, constant: None, symbol: None, args: [2, 3] }
+5
+Btor2Line { id: 5, lineno: 6, name: "output", tag: Output, sort: Btor2Sort { id: 0, tag: Array, name: None, content: Array { index: 0, element: 0 } }, init: 0, next: 0, constant: None, symbol: Some("out"), args: [4] }
