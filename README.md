@@ -26,6 +26,8 @@ Check out `cargo doc --open` for exposed functions.
 
 ## Contributing
 
-Issues and PRs are welcome. For pull requests, make sure to run the test harness
-with `make test` and `make benchmark`. There is also `.github/workflows/rust.yaml` 
-which will format your code and check that it is conforming with clippy.
+Issues and PRs are welcome. For pull requests, make sure to run the [Turnt](https://github.com/cucapra/turnt)
+test harness with `make test` and `make benchmark`. The `make test` output is in 
+[TAP](https://testanything.org/) format and can be prettified with TAP consumers,
+like [Faucet](https://github.com/ljharb/faucet). There is also `.github/workflows/rust.yaml` 
+which will format your code and check  that it is conforming with clippy.
