@@ -1,8 +1,7 @@
+use btor2i::cli;
 use btor2tools::Btor2Parser;
 use clap::Parser;
 use std::path::Path;
-
-mod cli;
 
 fn main() {
   let args = cli::CLI::parse();
