@@ -1,0 +1,8 @@
+/home/obhalerao/cornell/cs6120/btor2i/build/CMakeFiles/edit_cache.dir
+/home/obhalerao/cornell/cs6120/btor2i/build/CMakeFiles/rebuild_cache.dir
+/home/obhalerao/cornell/cs6120/btor2i/build/src/CMakeFiles/btor2parser.dir
+/home/obhalerao/cornell/cs6120/btor2i/build/src/CMakeFiles/btorsim.dir
+/home/obhalerao/cornell/cs6120/btor2i/build/src/CMakeFiles/catbtor.dir
+/home/obhalerao/cornell/cs6120/btor2i/build/src/CMakeFiles/btorsplit.dir
+/home/obhalerao/cornell/cs6120/btor2i/build/src/CMakeFiles/edit_cache.dir
+/home/obhalerao/cornell/cs6120/btor2i/build/src/CMakeFiles/rebuild_cache.dir

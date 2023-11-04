@@ -13,6 +13,7 @@ pub struct BitVector {
   bits: BitVec<usize, Lsb0>,
 }
 
+<<<<<<< HEAD
 impl BitVector {
   /// the value 0, of width `len`
   pub fn zeros(len: usize) -> Self {
@@ -22,6 +23,11 @@ impl BitVector {
     }
     BitVector { bits }
   }
+=======
+impl BitVector<u64> {
+    fn reserve(&mut self, n: u64) {
+        let goal_length: usize = (n / 64).try_into().unwrap();
+>>>>>>> f0c85b3 (format once more lol)
 
   /// the value 1, of width `len`
   pub fn one(len: usize) -> Self {

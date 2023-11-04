@@ -1,0 +1,1 @@
+/usr/bin/gcc -fPIC  -W -Wall -Wextra -Wredundant-decls -std=gnu99 -g3 -ggdb -g -shared -Wl,-soname,libbtor2parser.so -o ../lib/libbtor2parser.so CMakeFiles/btor2parser.dir/btor2parser/btor2parser.c.o 

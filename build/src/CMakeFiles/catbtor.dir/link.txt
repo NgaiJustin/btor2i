@@ -1,0 +1,1 @@
+/usr/bin/gcc  -W -Wall -Wextra -Wredundant-decls -std=gnu99 -g3 -ggdb -g -rdynamic CMakeFiles/catbtor.dir/catbtor.c.o -o ../bin/catbtor  -Wl,-rpath,/home/obhalerao/cornell/cs6120/btor2i/build/lib ../lib/libbtor2parser.so 

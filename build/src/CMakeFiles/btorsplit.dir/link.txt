@@ -1,0 +1,1 @@
+/usr/bin/g++  -W -Wall -Wextra -Wredundant-decls -std=gnu++11 -g3 -ggdb -g -rdynamic CMakeFiles/btorsplit.dir/btorsplit.cpp.o -o ../bin/btorsplit 
