@@ -13,7 +13,7 @@ pub struct BitVector<T> {
 }
 
 impl BitVector<u64> {
-    fn reserve(&mut self, n: u64) -> () {
+    fn reserve(&mut self, n: u64) {
         let goal_length: usize = (n / 64).try_into().unwrap();
 
         while self.bits.len() < goal_length {
@@ -27,7 +27,7 @@ impl BitVector<u64> {
         self.bits[idx] & (1 << (i % 64)) != 0
     }
 
-    fn set(&mut self, i: u64, b: bool) -> () {
+    fn set(&mut self, i: u64, b: bool) {
         assert! (0 <= i && i < self.width);
         let idx: usize = (i / 64).try_into().unwrap();
         if b {
