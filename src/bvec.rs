@@ -2,8 +2,6 @@ use std::ops::Add;
 
 #[derive(Debug, Clone)]
 pub struct BitVector<T> {
-  // length of bit vector
-  width: T,
   /// 'bits' represents the bit vector in chunks, first bit of integer
   ///  in bits[0] is LSB, bit vector is 'filled' from LSB, hence spare bits (if
   ///  any) come in front of the MSB and are zeroed out.
@@ -195,10 +193,7 @@ mod tests {
 
   #[test]
   fn test_get() {
-    let mut bv = BitVector::<u64> {
-      width: 64,
-      bits: vec![0, 0],
-    };
+    let mut bv = BitVector::<u64> { bits: vec![0, 0] };
     bv.set(0, true);
     assert_eq!(bv.get(0), true);
     assert_eq!(bv.get(1), false);
@@ -209,10 +204,7 @@ mod tests {
 
   #[test]
   fn test_set() {
-    let mut bv = BitVector::<u64> {
-      width: 64,
-      bits: vec![0, 0],
-    };
+    let mut bv = BitVector::<u64> { bits: vec![0, 0] };
     bv.set(0, true);
     assert_eq!(bv.get(0), true);
     assert_eq!(bv.get(1), false);
@@ -223,10 +215,7 @@ mod tests {
 
   #[test]
   fn test_to_bytes() {
-    let mut bv = BitVector::<u64> {
-      width: 64,
-      bits: vec![0, 0],
-    };
+    let mut bv = BitVector::<u64> { bits: vec![0, 0] };
     // set all bits to 1
     for i in 0..64 {
       bv.set(i, true);
