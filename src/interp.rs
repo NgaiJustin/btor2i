@@ -1,4 +1,9 @@
 use crate::bvec::BitVector;
+use btor2tools::Btor2Parser;
+use btor2tools::Btor2SortContent;
+use btor2tools::Btor2LineIterator;
+use std::collections::HashMap;
+use std::hash::Hash;
 
 struct Environment {
   // Maps sid/nid to value
@@ -33,3 +38,38 @@ enum Value {
   #[default]
   Uninitialized,
 }
+
+fn interpret(prog_iterator: Btor2LineIterator, env: Environment) {
+  // for now, we only deal with bitvec sorts
+  // map will be from line number to size of sort
+  let mut sorts_map = HashMap::<i64, u32>::new();
+
+  prog_iterator.for_each(|line| {
+    let id = line.id();
+    let tag = line.tag();
+    match tag {
+      Sort => {
+        let sort = line.sort();
+        match sort.tag() {
+          BitVector => {
+            if let Btor2SortContent::Bitvec{width} = sort.content(){
+              sorts_map.insert(id, width);
+            }
+          }
+        }
+      },
+      
+
+      _ => (),
+    }
+  })
+}
+
+
+
+// mapping from line #s to sorts
+// make sort a union type
+
+// Main loop interpreter signature
+// Btor2 program description, inputs: name -> BitVec
+// Add an interface element to convert a list of bools into a properly formatted bitvec map
