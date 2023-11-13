@@ -1,9 +1,9 @@
-use crate::bvec::BitVectorNew;
-use btor2tools::Btor2Parser;
+
+
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2LineIterator;
 use std::collections::HashMap;
-use std::hash::Hash;
+
 
 struct Environment {
   // Maps sid/nid to value
@@ -39,7 +39,7 @@ enum Value {
   Uninitialized,
 }
 
-fn interpret(prog_iterator: Btor2LineIterator, env: Environment) {
+fn interpret(prog_iterator: Btor2LineIterator, _env: Environment) {
   // for now, we only deal with bitvec sorts
   // map will be from line number to size of sort
   let mut sorts_map = HashMap::<i64, u32>::new();
@@ -51,7 +51,7 @@ fn interpret(prog_iterator: Btor2LineIterator, env: Environment) {
         btor2tools::Btor2Tag::Sort => {
         let sort = line.sort();
         match sort.tag() {
-          BitVector => {
+          _BitVector => {
             if let Btor2SortContent::Bitvec{width} = sort.content(){
               sorts_map.insert(id, width);
             }
