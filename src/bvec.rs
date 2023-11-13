@@ -3,7 +3,7 @@ use std::ops::{Neg, Add, Mul};
 
 use bitvector::BitVector as BVec;
 use num_bigint::{BigInt, BigUint};
-use num_traits::{Zero, CheckedAdd, CheckedSub, CheckedMul, CheckedDiv, CheckedRem};
+use num_traits::{Zero, One, CheckedSub};
 
 
 #[derive(Debug, Clone)]
@@ -141,16 +141,16 @@ impl BitVectorNew {
     bv.bits.len() % 2 == 1
   }
 
-  pub fn iff(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
+  pub fn iff(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> bool {
     todo!()
   }
 
-  pub fn implies(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
+  pub fn implies(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> bool {
     todo!()
   }
 
   pub fn eq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
-    if (bv1.bits.len() != bv2.bits.len()) {
+    if bv1.bits.len() != bv2.bits.len() {
         return false;
     }
     for i in &bv1.bits {
@@ -158,11 +158,11 @@ impl BitVectorNew {
             return false
         }
     }
-    return true;
+    true
   }
 
   pub fn neq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
-    if (bv1.bits.len() != bv2.bits.len()) {
+    if bv1.bits.len() != bv2.bits.len() {
         return true;
     }
     for i in &bv1.bits {
@@ -170,23 +170,29 @@ impl BitVectorNew {
             return false
         }
     }
-    return true
+    true
     
   }
 
   // a more intelligent implementation of this would be
   //to construct the vector of bytes and pass that to from_[signed]_bytes
   fn to_bigint(&self) -> BigInt {
-    if (self.bits.len() == 0) {
-        return Zero::zero();
+    if self.bits.is_empty() {
+        Zero::zero()
 
-    } else if (self.bits.contains (self.width - 1)) {
-        let neg = BitVectorNew::neg(self);
-        return neg.to_bigint().neg();
+    } else if self.bits.contains (self.width - 1) {
+        if self.bits.len() == 1 {
+            // handle min int separately
+            let inc = BitVectorNew::inc(self);
+            return inc.to_bigint().checked_sub(&One::one()).unwrap()
+        } else {
+            let neg = BitVectorNew::neg(self);
+            return neg.to_bigint().neg();
+        }
     }
     else {
         let mut ans: BigInt = Zero::zero();
-        for i in (0 .. self.width) {
+        for i in 0 .. self.width {
             ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
         }
         return ans;
@@ -195,37 +201,37 @@ impl BitVectorNew {
 
   fn to_biguint(&self) -> BigUint {
     let mut ans: BigUint = Zero::zero();
-    for i in (0 .. self.width) {
+    for i in 0 .. self.width {
         ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
     }
-    return ans;
+    ans
   }
 
   fn from_bigint(b: BigInt, width: usize) -> Self {
     let mut bits = BVec::new(width);
-    for i in (0 .. width) {
-        if (b.bit(i.try_into().unwrap())) {
+    for i in 0 .. width {
+        if b.bit(i.try_into().unwrap()) {
             bits.insert(i);
         }
     }
 
     BitVectorNew {
-        width: width,
-        bits: bits
+        width,
+        bits
     }
   }
 
   fn from_biguint(b: BigUint, width: usize) -> Self {
     let mut bits = BVec::new(width);
-    for i in (0 .. width) {
-        if (b.bit(i.try_into().unwrap())) {
+    for i in 0 .. width {
+        if b.bit(i.try_into().unwrap()) {
             bits.insert(i);
         }
     }
 
     BitVectorNew {
-        width: width,
-        bits: bits
+        width,
+        bits
     }
   }
 
@@ -268,11 +274,11 @@ impl BitVectorNew {
   }
 
   pub fn nand(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
-    BitVectorNew::not(&BitVectorNew::and(&bv1, &bv2))
+    BitVectorNew::not(&BitVectorNew::and(bv1, bv2))
   }
 
   pub fn nor(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
-    BitVectorNew::not(&BitVectorNew::or(&bv1, &bv2))
+    BitVectorNew::not(&BitVectorNew::or(bv1, bv2))
   }
 
   pub fn or(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
@@ -280,30 +286,30 @@ impl BitVectorNew {
   }
 
   pub fn xnor(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
-    BitVectorNew::not(&BitVectorNew::xor(&bv1, &bv2))
+    BitVectorNew::not(&BitVectorNew::xor(bv1, bv2))
   }
 
   pub fn xor(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
     BitVectorNew { bits: bv1.bits.difference(&bv2.bits).union(&bv2.bits.difference(&bv1.bits)), width: bv1.width }
   }
 
-  pub fn rol(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
+  pub fn rol(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> Self {
     todo!()
   }
 
-  pub fn ror(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
+  pub fn ror(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> Self {
     todo!()
   }
 
-  pub fn sll(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
+  pub fn sll(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> Self {
     todo!()
   }
 
-  pub fn sra(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
+  pub fn sra(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> Self {
     todo!()
   }
 
-  pub fn srl(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
+  pub fn srl(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> Self {
     todo!()
   }
 
@@ -316,15 +322,17 @@ impl BitVectorNew {
   }
 
   pub fn sub(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
-    BitVectorNew::from_biguint(
-        bv1.to_biguint().checked_sub(&bv2.to_biguint()).unwrap(), bv1.width)
+    BitVectorNew::from_bigint(
+        bv1.to_bigint().checked_sub(&bv2.to_bigint()).unwrap(), bv1.width)
   }
 
 }
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  
+
+use super::*;
 
   fn naive_test_eq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
     for i in &bv1.bits {
@@ -420,8 +428,28 @@ mod tests {
   }
 
   #[test]
-  fn test_arithmetic() {
+  fn test_unsigned_arithmetic_small() {
+    let MAX = 256;
+    let SIZE = 8;
 
+    let mut unsigned_numbers: Vec<BitVectorNew> = Vec::new();
+    unsigned_numbers.push(BitVectorNew::from_bits(vec![false; SIZE]));
+    for _i in 1..MAX {
+        unsigned_numbers.push(BitVectorNew::inc(unsigned_numbers.last().unwrap()));
+    }
+
+    for i in 0 .. MAX {
+        for j in 0 .. MAX {
+            let sum = BitVectorNew::add(&unsigned_numbers[i], &unsigned_numbers[j]);
+            let diff = BitVectorNew::sub(&unsigned_numbers[i], &unsigned_numbers[j]);
+            let prod = BitVectorNew::mul(&unsigned_numbers[i], &unsigned_numbers[j]);
+            assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % MAX]));
+            let sub_index = if i >= j {i - j} else {i + MAX - j};
+            assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % MAX]));
+            assert!(naive_test_eq(&prod, &unsigned_numbers[(i * j) % MAX]));
+        }
+    }
   }
+
 
 }
