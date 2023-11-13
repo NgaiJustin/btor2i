@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 extern crate bitvector;
-use bitvector::BitVector;
+use bitvector::BitVector as BVec;
 
 #[derive(Debug, Clone)]
 pub struct BitVectorOld<T> {
@@ -191,153 +191,145 @@ impl BitVectorOld<u64> {
   }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct BitVectorNew {
-    bits: bitvector::BitVector,
-    width: usize
+  bits: BVec,
+  width: usize,
 }
 
 impl BitVectorNew {
-    pub fn zeros(len: usize) -> Self {
-        let ans : BitVectorNew = BitVectorNew {
-            bits : BitVector::new(len),
-            width : len
-        };
-        ans
+  pub fn zeros(len: usize) -> Self {
+    let ans: BitVectorNew = BitVectorNew {
+      bits: BVec::new(len),
+      width: len,
+    };
+    ans
+  }
+
+  pub fn ones(len: usize) -> Self {
+    BitVectorNew {
+      bits: BVec::ones(len),
+      width: len,
+    }
+  }
+
+  pub fn from_bits(bits: Vec<bool>) -> Self {
+    let mut ans: BitVectorNew = BitVectorNew {
+      bits: BVec::new(bits.len()),
+      width: bits.len(),
+    };
+    for i in 0..ans.width {
+      if bits[i] {
+        ans.bits.insert(i);
+      }
+    }
+    ans
+  }
+
+  pub fn sign_extend(bv: BitVectorNew, w: usize) -> Self {
+    let mut other_vec: bitvector::BitVector = BVec::new(bv.width + w);
+    other_vec.insert_all(&bv.bits);
+    if bv.bits.contains(bv.width - 1) {
+      for i in bv.width..bv.width + w {
+        other_vec.insert(i);
+      }
+    }
+    BitVectorNew {
+      bits: other_vec,
+      width: bv.width + w,
+    }
+  }
+
+  pub fn zero_extend(bv: BitVectorNew, w: usize) -> Self {
+    let mut other_vec: bitvector::BitVector = BVec::new(bv.width + w);
+    other_vec.insert_all(&bv.bits);
+    BitVectorNew {
+      bits: other_vec,
+      width: bv.width + w,
+    }
+  }
+
+  pub fn slice(bv: BitVectorNew, u: usize, l: usize) -> Self {
+    let mut other_vec: bitvector::BitVector = BVec::new(u - l + 1);
+    for i in l..u + 1 {
+      if bv.bits.contains(i) {
+        other_vec.insert(i);
+      }
     }
 
-    pub fn ones(len: usize) -> Self {
-        BitVectorNew {
-            bits : BitVector::ones(len),
-            width : len
-        }
+    BitVectorNew {
+      bits: other_vec,
+      width: u - l + 1,
     }
+  }
 
-    pub fn from_bits(bits: Vec<bool>) -> Self {
-        let mut ans : BitVectorNew = BitVectorNew {
-            bits: bitvector::BitVector::new(bits.len()),
-            width : bits.len(),
-        };
-        for i in 0 .. ans.width {
-            if bits[i] {
-                ans.bits.insert(i);
-            }
-        }
-        ans
+  pub fn not(bv: BitVectorNew) -> Self {
+    let mut other_vec = bitvector::BitVector::new(bv.width);
+    for i in 0..bv.width {
+      if !bv.bits.contains(i) {
+        other_vec.insert(i);
+      }
     }
-
-    pub fn sign_extend(bv: BitVectorNew, w: usize) -> Self {
-        let mut other_vec : bitvector::BitVector = BitVector::new(bv.width + w);
-        other_vec.insert_all(&bv.bits);
-        if bv.bits.contains(bv.width - 1) {
-            for i in bv.width .. bv.width + w {
-                other_vec.insert(i);
-            }
-        }
-        BitVectorNew {
-            bits: other_vec,
-            width: bv.width + w,
-        }
+    BitVectorNew {
+      bits: other_vec,
+      width: bv.width,
     }
+  }
 
-    pub fn zero_extend(bv: BitVectorNew, w: usize) -> Self {
-        let mut other_vec : bitvector::BitVector = BitVector::new(bv.width + w);
-        other_vec.insert_all(&bv.bits);
-        BitVectorNew {
-            bits: other_vec,
-            width: bv.width + w,
-        }
+  pub fn inc(bv: BitVectorNew) -> Self {
+    let mut missing: usize = 0;
+    while missing < bv.width && bv.bits.contains(missing) {
+      missing += 1
     }
-
-    pub fn slice(bv: BitVectorNew, u: usize, l: usize) -> Self {
-        let mut other_vec : bitvector::BitVector = BitVector::new(u - l + 1);
-        for i in l .. u + 1 {
-            if bv.bits.contains(i) {
-                other_vec.insert(i);
-            }
-        }
-
-        BitVectorNew {
-            bits: other_vec,
-            width: u - l + 1,
-        }
+    if missing == bv.width {
+      BitVectorNew::zeros(bv.width)
+    } else {
+      let mut ans = bv.clone();
+      ans.bits.insert(missing);
+      for i in 0..missing {
+        ans.bits.remove(i);
+      }
+      ans
     }
+  }
 
-    pub fn not(bv: BitVectorNew) -> Self {
-        let mut other_vec = bitvector::BitVector::new(bv.width);
-        for i in 0 .. bv.width {
-            if !bv.bits.contains(i) {
-                other_vec.insert(i);
-            }
-        }
-        BitVectorNew {
-            bits: other_vec,
-            width: bv.width
-        }
+  pub fn dec(bv: BitVectorNew) -> Self {
+    let mut present: usize = 0;
+    while present < bv.width && !bv.bits.contains(present) {
+      present += 1
     }
-
-    pub fn inc(bv: BitVectorNew) -> Self {
-        let mut missing: usize = 0;
-        while missing < bv.width && bv.bits.contains(missing) {
-            missing += 1
-        }
-        if missing == bv.width {
-            BitVectorNew::zeros(bv.width)
-        }
-        else {
-            let mut ans = bv.clone();
-            ans.bits.insert(missing);
-            for i in 0 .. missing {
-                ans.bits.remove(i);
-            }
-            ans
-        }
+    if present == bv.width {
+      BitVectorNew::ones(bv.width)
+    } else {
+      let mut ans = bv.clone();
+      ans.bits.remove(present);
+      for i in 0..present {
+        ans.bits.insert(i);
+      }
+      ans
     }
+  }
 
-    pub fn dec(bv: BitVectorNew) -> Self {
-        let mut present: usize = 0;
-        while present < bv.width && !bv.bits.contains(present) {
-            present += 1
-        }
-        if present == bv.width {
-            BitVectorNew::ones(bv.width)
-        } else {
-            let mut ans = bv.clone();
-            ans.bits.remove(present);
-            for i in 0 .. present {
-                ans.bits.insert(i);
-            }
-            ans
-        }
-    }
+  pub fn neg(bv: BitVectorNew) -> Self {
+    BitVectorNew::inc(BitVectorNew::not(bv))
+  }
 
-    pub fn neg (bv: BitVectorNew) -> Self {
-        BitVectorNew::inc(BitVectorNew::not(bv))
-    }
+  pub fn redand(bv: BitVectorNew) -> bool {
+    bv.bits.len() == bv.width
+  }
 
-    pub fn redand(bv: BitVectorNew) -> bool {
-        bv.bits.len() == bv.width
-    }
+  pub fn redor(bv: BitVectorNew) -> bool {
+    !bv.bits.is_empty()
+  }
 
-    pub fn redor(bv: BitVectorNew) -> bool {
-        !bv.bits.is_empty()
-    }
+  pub fn redxor(bv: BitVectorNew) -> bool {
+    bv.bits.len() % 2 == 1
+  }
 
-    pub fn redxor(bv: BitVectorNew) -> bool {
-        bv.bits.len() % 2 == 1
-    }
-
-    pub fn eq(_bv1: BitVectorNew, _bv2: BitVectorNew) -> bool {
-        todo!()
-    }
-
-
+  pub fn eq(_bv1: BitVectorNew, _bv2: BitVectorNew) -> bool {
+    todo!()
+  }
 }
-
-
 
 #[cfg(test)]
-mod tests {
-  
-}
+mod tests {}
