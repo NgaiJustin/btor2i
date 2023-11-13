@@ -1,9 +1,7 @@
-
-
-use btor2tools::Btor2SortContent;
 use btor2tools::Btor2LineIterator;
+use btor2tools::Btor2SortContent;
+use btor2tools::Btor2SortTag;
 use std::collections::HashMap;
-
 
 struct Environment {
   // Maps sid/nid to value
@@ -48,24 +46,28 @@ fn interpret(prog_iterator: Btor2LineIterator, _env: Environment) {
     let id = line.id();
     let tag = line.tag();
     match tag {
-        btor2tools::Btor2Tag::Sort => {
+      btor2tools::Btor2Tag::Sort => {
         let sort = line.sort();
         match sort.tag() {
-          _BitVector => {
-            if let Btor2SortContent::Bitvec{width} = sort.content(){
+          Btor2SortTag::Bitvec => {
+            if let Btor2SortContent::Bitvec { width } = sort.content() {
               sorts_map.insert(id, width);
             }
           }
+          Btor2SortTag::Array => {
+            // if let Btor2SortContent::Array { index, element } = sort.content() {
+            //   if let Btor2SortContent::Bitvec { width } = element.content() {
+            //     sorts_map.insert(id, width);
+            //   }
+            // }
+          }
         }
-      },
-      
+      }
 
       _ => (),
     }
   })
 }
-
-
 
 // mapping from line #s to sorts
 // make sort a union type
