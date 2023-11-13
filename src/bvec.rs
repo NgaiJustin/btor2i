@@ -51,7 +51,7 @@ impl BitVectorOld<u64> {
 
     // handle all but the last block
     for i in 0..(self.width / 64 - 1).try_into().unwrap() {
-      for j in (0 as u64)..7 {
+      for j in 0_u64..7 {
         let mask: u64 = (u64::MAX >> (8 * j)) << (8 * j);
         bytes.push(((self.bits[i] & mask) >> (8 * j)).try_into().unwrap());
       }
@@ -82,7 +82,7 @@ impl BitVectorOld<u64> {
 
   fn from_bytes(bytes: Vec<u8>, width: u64, signed: bool) -> BitVectorOld<u64> {
     let mut ans: BitVectorOld<u64> = BitVectorOld {
-      width: width,
+      width,
       bits: Vec::new(),
     };
     ans.reserve(width);
@@ -187,7 +187,7 @@ impl BitVectorOld<u64> {
         right_bytes.as_ref(),
       ))
       .to_signed_bytes_le();
-    return BitVectorOld::<u64>::from_bytes(ans, left.width, true);
+    BitVectorOld::<u64>::from_bytes(ans, left.width, true)
   }
 }
 
@@ -200,7 +200,7 @@ pub struct BitVectorNew {
 
 impl BitVectorNew {
     pub fn zeros(len: usize) -> Self {
-        let mut ans : BitVectorNew = BitVectorNew {
+        let ans : BitVectorNew = BitVectorNew {
             bits : BitVector::new(len),
             width : len
         };
@@ -219,7 +219,7 @@ impl BitVectorNew {
             bits: bitvector::BitVector::new(bits.len()),
             width : bits.len(),
         };
-        for i in (0 .. ans.width) {
+        for i in 0 .. ans.width {
             if bits[i] {
                 ans.bits.insert(i);
             }
@@ -230,8 +230,8 @@ impl BitVectorNew {
     pub fn sign_extend(bv: BitVectorNew, w: usize) -> Self {
         let mut other_vec : bitvector::BitVector = BitVector::new(bv.width + w);
         other_vec.insert_all(&bv.bits);
-        if (bv.bits.contains(bv.width - 1)) {
-            for i in (bv.width .. bv.width + w) {
+        if bv.bits.contains(bv.width - 1) {
+            for i in bv.width .. bv.width + w {
                 other_vec.insert(i);
             }
         }
@@ -252,8 +252,8 @@ impl BitVectorNew {
 
     pub fn slice(bv: BitVectorNew, u: usize, l: usize) -> Self {
         let mut other_vec : bitvector::BitVector = BitVector::new(u - l + 1);
-        for i in (l .. u + 1) {
-            if (bv.bits.contains(i)) {
+        for i in l .. u + 1 {
+            if bv.bits.contains(i) {
                 other_vec.insert(i);
             }
         }
@@ -266,8 +266,8 @@ impl BitVectorNew {
 
     pub fn not(bv: BitVectorNew) -> Self {
         let mut other_vec = bitvector::BitVector::new(bv.width);
-        for i in (0 .. bv.width) {
-            if (!bv.bits.contains(i)) {
+        for i in 0 .. bv.width {
+            if !bv.bits.contains(i) {
                 other_vec.insert(i);
             }
         }
@@ -279,16 +279,16 @@ impl BitVectorNew {
 
     pub fn inc(bv: BitVectorNew) -> Self {
         let mut missing: usize = 0;
-        while (missing < bv.width && bv.bits.contains(missing)) {
+        while missing < bv.width && bv.bits.contains(missing) {
             missing += 1
         }
-        if (missing == bv.width) {
+        if missing == bv.width {
             BitVectorNew::zeros(bv.width)
         }
         else {
             let mut ans = bv.clone();
             ans.bits.insert(missing);
-            for i in (0 .. missing) {
+            for i in 0 .. missing {
                 ans.bits.remove(i);
             }
             ans
@@ -297,15 +297,15 @@ impl BitVectorNew {
 
     pub fn dec(bv: BitVectorNew) -> Self {
         let mut present: usize = 0;
-        while (present < bv.width && !bv.bits.contains(present)) {
+        while present < bv.width && !bv.bits.contains(present) {
             present += 1
         }
-        if (present == bv.width) {
+        if present == bv.width {
             BitVectorNew::ones(bv.width)
         } else {
             let mut ans = bv.clone();
             ans.bits.remove(present);
-            for i in (0 .. present) {
+            for i in 0 .. present {
                 ans.bits.insert(i);
             }
             ans
@@ -321,14 +321,14 @@ impl BitVectorNew {
     }
 
     pub fn redor(bv: BitVectorNew) -> bool {
-        bv.bits.len() > 0
+        !bv.bits.is_empty()
     }
 
     pub fn redxor(bv: BitVectorNew) -> bool {
         bv.bits.len() % 2 == 1
     }
 
-    pub fn eq(bv1: BitVectorNew, bv2: BitVectorNew) -> bool {
+    pub fn eq(_bv1: BitVectorNew, _bv2: BitVectorNew) -> bool {
         todo!()
     }
 
@@ -339,5 +339,5 @@ impl BitVectorNew {
 
 #[cfg(test)]
 mod tests {
-  use super::BitVectorNew;
+  
 }
