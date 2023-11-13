@@ -1,7 +1,10 @@
 use std::ops::Add;
 
+extern crate bitvector;
+use bitvector::BitVector;
+
 #[derive(Debug, Clone)]
-pub struct BitVector<T> {
+pub struct BitVectorOld<T> {
   /// 'bits' represents the bit vector in chunks, first bit of integer
   ///  in bits[0] is LSB, bit vector is 'filled' from LSB, hence spare bits (if
   ///  any) come in front of the MSB and are zeroed out.
@@ -10,9 +13,10 @@ pub struct BitVector<T> {
   ///               ^ ^--- MSB
   ///               |--- spare bit
   bits: Vec<T>,
+  width: u64,
 }
 
-impl BitVector<u64> {
+impl BitVectorOld<u64> {
   /// helper function to be used when changing width to [n]
   fn reserve(&mut self, n: u64) {
     // if n is not a multiple of 64, we need to add an extra block
@@ -76,8 +80,8 @@ impl BitVector<u64> {
     bytes
   }
 
-  fn from_bytes(bytes: Vec<u8>, width: u64, signed: bool) -> BitVector<u64> {
-    let mut ans: BitVector<u64> = BitVector {
+  fn from_bytes(bytes: Vec<u8>, width: u64, signed: bool) -> BitVectorOld<u64> {
+    let mut ans: BitVectorOld<u64> = BitVectorOld {
       width: width,
       bits: Vec::new(),
     };
@@ -95,7 +99,7 @@ impl BitVector<u64> {
     ans
   }
 
-  fn sign_extend(&self, w: u64) -> BitVector<u64> {
+  fn sign_extend(&self, w: u64) -> BitVectorOld<u64> {
     let mut ans = self.clone();
     ans.width += w;
     ans.reserve(self.width + w);
@@ -105,7 +109,7 @@ impl BitVector<u64> {
     ans
   }
 
-  fn zero_extend(&self, w: u64) -> BitVector<u64> {
+  fn zero_extend(&self, w: u64) -> BitVectorOld<u64> {
     let mut ans = self.clone();
     ans.width += w;
     ans.reserve(self.width + w);
@@ -115,7 +119,7 @@ impl BitVector<u64> {
     ans
   }
 
-  fn slice(&self, u: u64, l: u64) -> BitVector<u64> {
+  fn slice(&self, u: u64, l: u64) -> BitVectorOld<u64> {
     let mut ans = self.clone();
     ans.width = u - l + 1;
     for i in (l - 1)..u {
@@ -124,7 +128,7 @@ impl BitVector<u64> {
     ans
   }
 
-  fn not(&self) -> BitVector<u64> {
+  fn not(&self) -> BitVectorOld<u64> {
     let mut ans = self.clone();
     for i in 1..(self.width - 1) {
       ans.set(i, !ans.get(i));
@@ -132,7 +136,7 @@ impl BitVector<u64> {
     ans
   }
 
-  fn inc(&self) -> BitVector<u64> {
+  fn inc(&self) -> BitVectorOld<u64> {
     let mut ans = self.clone();
     let i: usize = 0;
     let mut done = false;
@@ -175,7 +179,7 @@ impl BitVector<u64> {
 
   fn redxor(&self) {}
 
-  fn add(left: BitVector<u64>, right: BitVector<u64>) -> BitVector<u64> {
+  fn add(left: BitVectorOld<u64>, right: BitVectorOld<u64>) -> BitVectorOld<u64> {
     let left_bytes: Vec<u8> = left.to_bytes(true);
     let right_bytes: Vec<u8> = right.to_bytes(true);
     let ans: Vec<u8> = num_bigint::BigInt::from_signed_bytes_le(left_bytes.as_ref())
@@ -183,49 +187,157 @@ impl BitVector<u64> {
         right_bytes.as_ref(),
       ))
       .to_signed_bytes_le();
-    return BitVector::<u64>::from_bytes(ans, left.width, true);
+    return BitVectorOld::<u64>::from_bytes(ans, left.width, true);
   }
 }
 
+
+#[derive(Debug, Clone)]
+pub struct BitVectorNew {
+    bits: bitvector::BitVector,
+    width: usize
+}
+
+impl BitVectorNew {
+    pub fn zeros(len: usize) -> Self {
+        let mut ans : BitVectorNew = BitVectorNew {
+            bits : BitVector::new(len),
+            width : len
+        };
+        ans
+    }
+
+    pub fn ones(len: usize) -> Self {
+        BitVectorNew {
+            bits : BitVector::ones(len),
+            width : len
+        }
+    }
+
+    pub fn from_bits(bits: Vec<bool>) -> Self {
+        let mut ans : BitVectorNew = BitVectorNew {
+            bits: bitvector::BitVector::new(bits.len()),
+            width : bits.len(),
+        };
+        for i in (0 .. ans.width) {
+            if bits[i] {
+                ans.bits.insert(i);
+            }
+        }
+        ans
+    }
+
+    pub fn sign_extend(bv: BitVectorNew, w: usize) -> Self {
+        let mut other_vec : bitvector::BitVector = BitVector::new(bv.width + w);
+        other_vec.insert_all(&bv.bits);
+        if (bv.bits.contains(bv.width - 1)) {
+            for i in (bv.width .. bv.width + w) {
+                other_vec.insert(i);
+            }
+        }
+        BitVectorNew {
+            bits: other_vec,
+            width: bv.width + w,
+        }
+    }
+
+    pub fn zero_extend(bv: BitVectorNew, w: usize) -> Self {
+        let mut other_vec : bitvector::BitVector = BitVector::new(bv.width + w);
+        other_vec.insert_all(&bv.bits);
+        BitVectorNew {
+            bits: other_vec,
+            width: bv.width + w,
+        }
+    }
+
+    pub fn slice(bv: BitVectorNew, u: usize, l: usize) -> Self {
+        let mut other_vec : bitvector::BitVector = BitVector::new(u - l + 1);
+        for i in (l .. u + 1) {
+            if (bv.bits.contains(i)) {
+                other_vec.insert(i);
+            }
+        }
+
+        BitVectorNew {
+            bits: other_vec,
+            width: u - l + 1,
+        }
+    }
+
+    pub fn not(bv: BitVectorNew) -> Self {
+        let mut other_vec = bitvector::BitVector::new(bv.width);
+        for i in (0 .. bv.width) {
+            if (!bv.bits.contains(i)) {
+                other_vec.insert(i);
+            }
+        }
+        BitVectorNew {
+            bits: other_vec,
+            width: bv.width
+        }
+    }
+
+    pub fn inc(bv: BitVectorNew) -> Self {
+        let mut missing: usize = 0;
+        while (missing < bv.width && bv.bits.contains(missing)) {
+            missing += 1
+        }
+        if (missing == bv.width) {
+            BitVectorNew::zeros(bv.width)
+        }
+        else {
+            let mut ans = bv.clone();
+            ans.bits.insert(missing);
+            for i in (0 .. missing) {
+                ans.bits.remove(i);
+            }
+            ans
+        }
+    }
+
+    pub fn dec(bv: BitVectorNew) -> Self {
+        let mut present: usize = 0;
+        while (present < bv.width && !bv.bits.contains(present)) {
+            present += 1
+        }
+        if (present == bv.width) {
+            BitVectorNew::ones(bv.width)
+        } else {
+            let mut ans = bv.clone();
+            ans.bits.remove(present);
+            for i in (0 .. present) {
+                ans.bits.insert(i);
+            }
+            ans
+        }
+    }
+
+    pub fn neg (bv: BitVectorNew) -> Self {
+        BitVectorNew::inc(BitVectorNew::not(bv))
+    }
+
+    pub fn redand(bv: BitVectorNew) -> bool {
+        bv.bits.len() == bv.width
+    }
+
+    pub fn redor(bv: BitVectorNew) -> bool {
+        bv.bits.len() > 0
+    }
+
+    pub fn redxor(bv: BitVectorNew) -> bool {
+        bv.bits.len() % 2 == 1
+    }
+
+    pub fn eq(bv1: BitVectorNew, bv2: BitVectorNew) -> bool {
+        todo!()
+    }
+
+
+}
+
+
+
 #[cfg(test)]
 mod tests {
-  use super::*;
-
-  #[test]
-  fn test_get() {
-    let mut bv = BitVector::<u64> { bits: vec![0, 0] };
-    bv.set(0, true);
-    assert_eq!(bv.get(0), true);
-    assert_eq!(bv.get(1), false);
-    bv.set(1, true);
-    assert_eq!(bv.get(0), true);
-    assert_eq!(bv.get(1), true);
-  }
-
-  #[test]
-  fn test_set() {
-    let mut bv = BitVector::<u64> { bits: vec![0, 0] };
-    bv.set(0, true);
-    assert_eq!(bv.get(0), true);
-    assert_eq!(bv.get(1), false);
-    bv.set(1, true);
-    assert_eq!(bv.get(0), true);
-    assert_eq!(bv.get(1), true);
-  }
-
-  #[test]
-  fn test_to_bytes() {
-    let mut bv = BitVector::<u64> { bits: vec![0, 0] };
-    // set all bits to 1
-    for i in 0..64 {
-      bv.set(i, true);
-    }
-    let bytes = bv.to_bytes(false);
-    assert_eq!(bytes.len(), 8);
-
-    // check that all bytes are 255
-    for i in 0..7 {
-      assert_eq!(bytes[i], 255);
-    }
-  }
+  use super::BitVectorNew;
 }

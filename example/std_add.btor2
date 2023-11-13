@@ -5,3 +5,17 @@
 4 add 1 2 3
 5 output 4 out ; temp.sv:7.35-7.38
 ; end of yosys output
+
+
+
+interpreter parses inputs into S
+invokes main loop
+main loop maintains map fron node-id to BitVec
+
+
+S = Map from String to BitVec
+main loop simply stars with a pointer to S and checks that each arg has the right width
+
+S = List of List of Bool
+S gets turned into a map from node-id to BitVec, and at this point we check the width of each arg
+then main loop gets called

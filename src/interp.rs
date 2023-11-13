@@ -1,4 +1,4 @@
-use crate::bvec::BitVector;
+use crate::bvec::BitVectorNew;
 use btor2tools::Btor2Parser;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2LineIterator;
@@ -33,7 +33,7 @@ impl Environment {
 
 #[derive(Debug, Default, Clone)]
 enum Value {
-  BitVector(BitVector<usize>),
+  BitVectorNew,
   // TODO: Add support for <STATE>
   #[default]
   Uninitialized,
@@ -48,7 +48,7 @@ fn interpret(prog_iterator: Btor2LineIterator, env: Environment) {
     let id = line.id();
     let tag = line.tag();
     match tag {
-      Sort => {
+        btor2tools::Btor2Tag::Sort => {
         let sort = line.sort();
         match sort.tag() {
           BitVector => {
