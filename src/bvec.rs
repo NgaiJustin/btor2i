@@ -1,10 +1,9 @@
 extern crate bitvector;
-use std::ops::{Neg, Add, Mul};
+use std::ops::{Add, Mul, Neg};
 
 use bitvector::BitVector as BVec;
 use num_bigint::{BigInt, BigUint};
-use num_traits::{Zero, One, CheckedSub};
-
+use num_traits::{CheckedSub, One, Zero};
 
 #[derive(Debug, Clone)]
 pub struct BitVectorNew {
@@ -151,88 +150,79 @@ impl BitVectorNew {
 
   pub fn eq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
     if bv1.bits.len() != bv2.bits.len() {
-        return false;
+      return false;
     }
     for i in &bv1.bits {
-        if !(bv2.bits.contains(i)) {
-            return false
-        }
+      if !(bv2.bits.contains(i)) {
+        return false;
+      }
     }
     true
   }
 
   pub fn neq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
     if bv1.bits.len() != bv2.bits.len() {
-        return true;
+      return true;
     }
     for i in &bv1.bits {
-        if !(bv2.bits.contains(i)) {
-            return false
-        }
+      if !(bv2.bits.contains(i)) {
+        return false;
+      }
     }
     true
-    
   }
 
   // a more intelligent implementation of this would be
   //to construct the vector of bytes and pass that to from_[signed]_bytes
   fn to_bigint(&self) -> BigInt {
     if self.bits.is_empty() {
-        Zero::zero()
-
-    } else if self.bits.contains (self.width - 1) {
-        if self.bits.len() == 1 {
-            // handle min int separately
-            let inc = BitVectorNew::inc(self);
-            return inc.to_bigint().checked_sub(&One::one()).unwrap()
-        } else {
-            let neg = BitVectorNew::neg(self);
-            return neg.to_bigint().neg();
-        }
+      Zero::zero()
+    } else if self.bits.contains(self.width - 1) {
+      if self.bits.len() == 1 {
+        // handle min int separately
+        let inc = BitVectorNew::inc(self);
+        return inc.to_bigint().checked_sub(&One::one()).unwrap();
+      } else {
+        let neg = BitVectorNew::neg(self);
+        return neg.to_bigint().neg();
+      }
+    } else {
+      let mut ans: BigInt = Zero::zero();
+      for i in 0..self.width {
+        ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
+      }
+      return ans;
     }
-    else {
-        let mut ans: BigInt = Zero::zero();
-        for i in 0 .. self.width {
-            ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
-        }
-        return ans;
-    }
-}
+  }
 
   fn to_biguint(&self) -> BigUint {
     let mut ans: BigUint = Zero::zero();
-    for i in 0 .. self.width {
-        ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
+    for i in 0..self.width {
+      ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
     }
     ans
   }
 
   fn from_bigint(b: BigInt, width: usize) -> Self {
     let mut bits = BVec::new(width);
-    for i in 0 .. width {
-        if b.bit(i.try_into().unwrap()) {
-            bits.insert(i);
-        }
+    for i in 0..width {
+      if b.bit(i.try_into().unwrap()) {
+        bits.insert(i);
+      }
     }
 
-    BitVectorNew {
-        width,
-        bits
-    }
+    BitVectorNew { width, bits }
   }
 
   fn from_biguint(b: BigUint, width: usize) -> Self {
     let mut bits = BVec::new(width);
-    for i in 0 .. width {
-        if b.bit(i.try_into().unwrap()) {
-            bits.insert(i);
-        }
+    for i in 0..width {
+      if b.bit(i.try_into().unwrap()) {
+        bits.insert(i);
+      }
     }
 
-    BitVectorNew {
-        width,
-        bits
-    }
+    BitVectorNew { width, bits }
   }
 
   pub fn sgt(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
@@ -267,10 +257,12 @@ impl BitVectorNew {
     bv1.to_biguint() <= bv2.to_biguint()
   }
 
-
   /// these are also kinda inefficient
   pub fn and(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
-    BitVectorNew { bits: bv1.bits.intersection(&bv2.bits), width: bv1.width }
+    BitVectorNew {
+      bits: bv1.bits.intersection(&bv2.bits),
+      width: bv1.width,
+    }
   }
 
   pub fn nand(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
@@ -282,7 +274,10 @@ impl BitVectorNew {
   }
 
   pub fn or(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
-    BitVectorNew { bits: bv1.bits.union(&bv2.bits), width: bv1.width }
+    BitVectorNew {
+      bits: bv1.bits.union(&bv2.bits),
+      width: bv1.width,
+    }
   }
 
   pub fn xnor(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
@@ -290,7 +285,13 @@ impl BitVectorNew {
   }
 
   pub fn xor(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
-    BitVectorNew { bits: bv1.bits.difference(&bv2.bits).union(&bv2.bits.difference(&bv1.bits)), width: bv1.width }
+    BitVectorNew {
+      bits: bv1
+        .bits
+        .difference(&bv2.bits)
+        .union(&bv2.bits.difference(&bv1.bits)),
+      width: bv1.width,
+    }
   }
 
   pub fn rol(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> Self {
@@ -323,27 +324,27 @@ impl BitVectorNew {
 
   pub fn sub(bv1: &BitVectorNew, bv2: &BitVectorNew) -> Self {
     BitVectorNew::from_bigint(
-        bv1.to_bigint().checked_sub(&bv2.to_bigint()).unwrap(), bv1.width)
+      bv1.to_bigint().checked_sub(&bv2.to_bigint()).unwrap(),
+      bv1.width,
+    )
   }
-
 }
 
 #[cfg(test)]
 mod tests {
-  
 
-use super::*;
+  use super::*;
 
   fn naive_test_eq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
     for i in &bv1.bits {
-        if !(bv2.bits.contains(i)) {
-            return false;
-        }
+      if !(bv2.bits.contains(i)) {
+        return false;
+      }
     }
     for i in &bv2.bits {
-        if !(bv1.bits.contains(i)) {
-            return false;
-        }
+      if !(bv1.bits.contains(i)) {
+        return false;
+      }
     }
     bv1.width == bv2.width
   }
@@ -351,33 +352,51 @@ use super::*;
   #[test]
   /// checks internal representation (no actual logic)
   fn test_helpers() {
-    let bv = BitVectorNew::from_bits( vec![true, false, true, true] );
+    let bv = BitVectorNew::from_bits(vec![true, false, true, true]);
     let bv_7 = BitVectorNew::ones(4);
     let bv_7_2 = BitVectorNew::from_bits(vec![true, true, true, true]);
-    assert! (bv.bits.contains(0));
-    assert! (!bv.bits.contains(1));
-    assert! (bv.bits.contains(2));
-    assert! (bv.bits.contains(3));
-    assert! (!naive_test_eq(&bv, &bv_7));
-    assert! (naive_test_eq(&bv_7, &bv_7_2));
+    assert!(bv.bits.contains(0));
+    assert!(!bv.bits.contains(1));
+    assert!(bv.bits.contains(2));
+    assert!(bv.bits.contains(3));
+    assert!(!naive_test_eq(&bv, &bv_7));
+    assert!(naive_test_eq(&bv_7, &bv_7_2));
   }
 
   #[test]
   fn test_slices() {
     let bv_3 = BitVectorNew::from_bits(vec![true, true, false]);
     let bv_5 = BitVectorNew::from_bits(vec![true, false, true]);
-    
+
     let bv_3_longer = BitVectorNew::from_bits(vec![true, true, false, false, false]);
 
-    assert! (naive_test_eq(&BitVectorNew::sign_extend(&bv_3, 2), &bv_3_longer));
-    assert! (naive_test_eq(&BitVectorNew::zero_extend(&bv_3, 2), &bv_3_longer));
+    assert!(naive_test_eq(
+      &BitVectorNew::sign_extend(&bv_3, 2),
+      &bv_3_longer
+    ));
+    assert!(naive_test_eq(
+      &BitVectorNew::zero_extend(&bv_3, 2),
+      &bv_3_longer
+    ));
 
-    assert! (naive_test_eq(&BitVectorNew::sign_extend(&bv_5, 2), &BitVectorNew::from_bits(vec![true, false, true, true, true])));
-    assert! (naive_test_eq(&BitVectorNew::zero_extend(&bv_5, 3), &BitVectorNew::from_bits(vec![true, false, true, false, false, false])));
+    assert!(naive_test_eq(
+      &BitVectorNew::sign_extend(&bv_5, 2),
+      &BitVectorNew::from_bits(vec![true, false, true, true, true])
+    ));
+    assert!(naive_test_eq(
+      &BitVectorNew::zero_extend(&bv_5, 3),
+      &BitVectorNew::from_bits(vec![true, false, true, false, false, false])
+    ));
 
-    assert! (naive_test_eq(&BitVectorNew::slice(&bv_5, 1, 1), &BitVectorNew::from_bits(vec![true])));
-    assert! (naive_test_eq(&BitVectorNew::slice(&bv_5, 1, 3), &bv_5));
-    assert! (naive_test_eq(&BitVectorNew::slice(&bv_3_longer, 2, 5), &BitVectorNew::from_bits(vec![true, false, false, false])));
+    assert!(naive_test_eq(
+      &BitVectorNew::slice(&bv_5, 1, 1),
+      &BitVectorNew::from_bits(vec![true])
+    ));
+    assert!(naive_test_eq(&BitVectorNew::slice(&bv_5, 1, 3), &bv_5));
+    assert!(naive_test_eq(
+      &BitVectorNew::slice(&bv_3_longer, 2, 5),
+      &BitVectorNew::from_bits(vec![true, false, false, false])
+    ));
   }
 
   #[test]
@@ -387,44 +406,58 @@ use super::*;
     let bv_2 = BitVectorNew::from_bits(vec![false, true]);
     let bv_3 = BitVectorNew::from_bits(vec![true, true]);
 
-    assert! (naive_test_eq(&BitVectorNew::inc(&bv_0), &bv_1));
-    assert! (naive_test_eq(&BitVectorNew::inc(&bv_1), &bv_2));
-    assert! (naive_test_eq(&BitVectorNew::inc(&bv_2), &bv_3));
-    assert! (naive_test_eq(&BitVectorNew::inc(&bv_3), &bv_0));
-    
-    assert! (naive_test_eq(&BitVectorNew::dec(&bv_1), &bv_0));
-    assert! (naive_test_eq(&BitVectorNew::dec(&bv_2), &bv_1));
-    assert! (naive_test_eq(&BitVectorNew::dec(&bv_3), &bv_2));
-    assert! (naive_test_eq(&BitVectorNew::dec(&bv_0), &bv_3));
+    assert!(naive_test_eq(&BitVectorNew::inc(&bv_0), &bv_1));
+    assert!(naive_test_eq(&BitVectorNew::inc(&bv_1), &bv_2));
+    assert!(naive_test_eq(&BitVectorNew::inc(&bv_2), &bv_3));
+    assert!(naive_test_eq(&BitVectorNew::inc(&bv_3), &bv_0));
 
-    assert! (naive_test_eq(&BitVectorNew::not(&bv_0), &bv_3));
-    assert! (naive_test_eq(&BitVectorNew::not(&bv_1), &bv_2));
+    assert!(naive_test_eq(&BitVectorNew::dec(&bv_1), &bv_0));
+    assert!(naive_test_eq(&BitVectorNew::dec(&bv_2), &bv_1));
+    assert!(naive_test_eq(&BitVectorNew::dec(&bv_3), &bv_2));
+    assert!(naive_test_eq(&BitVectorNew::dec(&bv_0), &bv_3));
 
+    assert!(naive_test_eq(&BitVectorNew::not(&bv_0), &bv_3));
+    assert!(naive_test_eq(&BitVectorNew::not(&bv_1), &bv_2));
 
     // pairs add to 4
-    assert! (naive_test_eq(&BitVectorNew::neg(&bv_0), &bv_0));
-    assert! (naive_test_eq(&BitVectorNew::neg(&bv_1), &bv_3));
-    assert! (naive_test_eq(&BitVectorNew::neg(&bv_2), &bv_2));
-    assert! (naive_test_eq(&BitVectorNew::neg(&bv_3), &bv_1));
+    assert!(naive_test_eq(&BitVectorNew::neg(&bv_0), &bv_0));
+    assert!(naive_test_eq(&BitVectorNew::neg(&bv_1), &bv_3));
+    assert!(naive_test_eq(&BitVectorNew::neg(&bv_2), &bv_2));
+    assert!(naive_test_eq(&BitVectorNew::neg(&bv_3), &bv_1));
 
-    assert! (BitVectorNew::redand(&bv_3));
-    assert! (!BitVectorNew::redand(&bv_1));
-    assert! (!BitVectorNew::redand(&bv_2));
-    assert! (!BitVectorNew::redand(&bv_0));
-    
-    assert! (!BitVectorNew::redor(&bv_0));
-    assert! (BitVectorNew::redor(&bv_1));
-    assert! (BitVectorNew::redor(&bv_2));
-    assert! (BitVectorNew::redor(&bv_3));
+    assert!(BitVectorNew::redand(&bv_3));
+    assert!(!BitVectorNew::redand(&bv_1));
+    assert!(!BitVectorNew::redand(&bv_2));
+    assert!(!BitVectorNew::redand(&bv_0));
 
-    assert! (!BitVectorNew::redxor(&bv_0));
-    assert! (BitVectorNew::redxor(&bv_1));
-    assert! (BitVectorNew::redxor(&bv_2));
-    assert! (!BitVectorNew::redxor(&bv_3));
+    assert!(!BitVectorNew::redor(&bv_0));
+    assert!(BitVectorNew::redor(&bv_1));
+    assert!(BitVectorNew::redor(&bv_2));
+    assert!(BitVectorNew::redor(&bv_3));
 
-    assert! (naive_test_eq(&BitVectorNew::neg(&BitVectorNew::neg(&BitVectorNew::neg(&BitVectorNew::neg(&bv_3)))), &bv_3));
-    assert! (naive_test_eq(&BitVectorNew::not(&BitVectorNew::not(&BitVectorNew::not(&BitVectorNew::not(&bv_2)))), &bv_2));
-    assert! (naive_test_eq(&BitVectorNew::inc(&BitVectorNew::dec(&BitVectorNew::dec(&BitVectorNew::inc(&bv_2)))), &bv_2));
+    assert!(!BitVectorNew::redxor(&bv_0));
+    assert!(BitVectorNew::redxor(&bv_1));
+    assert!(BitVectorNew::redxor(&bv_2));
+    assert!(!BitVectorNew::redxor(&bv_3));
+
+    assert!(naive_test_eq(
+      &BitVectorNew::neg(&BitVectorNew::neg(&BitVectorNew::neg(&BitVectorNew::neg(
+        &bv_3
+      )))),
+      &bv_3
+    ));
+    assert!(naive_test_eq(
+      &BitVectorNew::not(&BitVectorNew::not(&BitVectorNew::not(&BitVectorNew::not(
+        &bv_2
+      )))),
+      &bv_2
+    ));
+    assert!(naive_test_eq(
+      &BitVectorNew::inc(&BitVectorNew::dec(&BitVectorNew::dec(&BitVectorNew::inc(
+        &bv_2
+      )))),
+      &bv_2
+    ));
   }
 
   #[test]
@@ -435,21 +468,19 @@ use super::*;
     let mut unsigned_numbers: Vec<BitVectorNew> = Vec::new();
     unsigned_numbers.push(BitVectorNew::from_bits(vec![false; SIZE]));
     for _i in 1..MAX {
-        unsigned_numbers.push(BitVectorNew::inc(unsigned_numbers.last().unwrap()));
+      unsigned_numbers.push(BitVectorNew::inc(unsigned_numbers.last().unwrap()));
     }
 
-    for i in 0 .. MAX {
-        for j in 0 .. MAX {
-            let sum = BitVectorNew::add(&unsigned_numbers[i], &unsigned_numbers[j]);
-            let diff = BitVectorNew::sub(&unsigned_numbers[i], &unsigned_numbers[j]);
-            let prod = BitVectorNew::mul(&unsigned_numbers[i], &unsigned_numbers[j]);
-            assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % MAX]));
-            let sub_index = if i >= j {i - j} else {i + MAX - j};
-            assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % MAX]));
-            assert!(naive_test_eq(&prod, &unsigned_numbers[(i * j) % MAX]));
-        }
+    for i in 0..MAX {
+      for j in 0..MAX {
+        let sum = BitVectorNew::add(&unsigned_numbers[i], &unsigned_numbers[j]);
+        let diff = BitVectorNew::sub(&unsigned_numbers[i], &unsigned_numbers[j]);
+        let prod = BitVectorNew::mul(&unsigned_numbers[i], &unsigned_numbers[j]);
+        assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % MAX]));
+        let sub_index = if i >= j { i - j } else { i + MAX - j };
+        assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % MAX]));
+        assert!(naive_test_eq(&prod, &unsigned_numbers[(i * j) % MAX]));
+      }
     }
   }
-
-
 }
