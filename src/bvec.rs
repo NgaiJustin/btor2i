@@ -226,7 +226,7 @@ impl BitVectorNew {
     ans
   }
 
-  pub fn sign_extend(bv: BitVectorNew, w: usize) -> Self {
+  pub fn sign_extend(bv: &BitVectorNew, w: usize) -> Self {
     let mut other_vec: bitvector::BitVector = BVec::new(bv.width + w);
     other_vec.insert_all(&bv.bits);
     if bv.bits.contains(bv.width - 1) {
@@ -240,7 +240,7 @@ impl BitVectorNew {
     }
   }
 
-  pub fn zero_extend(bv: BitVectorNew, w: usize) -> Self {
+  pub fn zero_extend(bv: &BitVectorNew, w: usize) -> Self {
     let mut other_vec: bitvector::BitVector = BVec::new(bv.width + w);
     other_vec.insert_all(&bv.bits);
     BitVectorNew {
@@ -249,11 +249,11 @@ impl BitVectorNew {
     }
   }
 
-  pub fn slice(bv: BitVectorNew, u: usize, l: usize) -> Self {
+  pub fn slice(bv: &BitVectorNew, l: usize, u: usize) -> Self {
     let mut other_vec: bitvector::BitVector = BVec::new(u - l + 1);
-    for i in l..u + 1 {
+    for i in (l - 1)..u {
       if bv.bits.contains(i) {
-        other_vec.insert(i);
+        other_vec.insert(i - (l - 1));
       }
     }
 
@@ -263,7 +263,7 @@ impl BitVectorNew {
     }
   }
 
-  pub fn not(bv: BitVectorNew) -> Self {
+  pub fn not(bv: &BitVectorNew) -> Self {
     let mut other_vec = bitvector::BitVector::new(bv.width);
     for i in 0..bv.width {
       if !bv.bits.contains(i) {
@@ -276,7 +276,7 @@ impl BitVectorNew {
     }
   }
 
-  pub fn inc(bv: BitVectorNew) -> Self {
+  pub fn inc(bv: &BitVectorNew) -> Self {
     let mut missing: usize = 0;
     while missing < bv.width && bv.bits.contains(missing) {
       missing += 1
@@ -293,7 +293,7 @@ impl BitVectorNew {
     }
   }
 
-  pub fn dec(bv: BitVectorNew) -> Self {
+  pub fn dec(bv: &BitVectorNew) -> Self {
     let mut present: usize = 0;
     while present < bv.width && !bv.bits.contains(present) {
       present += 1
@@ -310,26 +310,76 @@ impl BitVectorNew {
     }
   }
 
-  pub fn neg(bv: BitVectorNew) -> Self {
-    BitVectorNew::inc(BitVectorNew::not(bv))
+  pub fn neg(bv: &BitVectorNew) -> Self {
+    BitVectorNew::inc(&BitVectorNew::not(&bv))
   }
 
-  pub fn redand(bv: BitVectorNew) -> bool {
+  pub fn redand(bv: &BitVectorNew) -> bool {
     bv.bits.len() == bv.width
   }
 
-  pub fn redor(bv: BitVectorNew) -> bool {
+  pub fn redor(bv: &BitVectorNew) -> bool {
     !bv.bits.is_empty()
   }
 
-  pub fn redxor(bv: BitVectorNew) -> bool {
+  pub fn redxor(bv: &BitVectorNew) -> bool {
     bv.bits.len() % 2 == 1
   }
 
-  pub fn eq(_bv1: BitVectorNew, _bv2: BitVectorNew) -> bool {
+  pub fn eq(_bv1: &BitVectorNew, _bv2: &BitVectorNew) -> bool {
     todo!()
   }
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+  use super::*;
+
+  fn naive_test_eq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
+    for i in &bv1.bits {
+        if (!(bv2.bits.contains(i))) {
+            return false;
+        }
+    }
+    for i in &bv2.bits {
+        if (!(bv1.bits.contains(i))) {
+            return false;
+        }
+    }
+    if (bv1.width != bv2.width) {return false;}
+    else {return true}
+  }
+
+  #[test]
+  /// checks internal representation (no actual logic)
+  fn test_helpers() {
+    let bv = BitVectorNew::from_bits( vec![true, false, true, true] );
+    let bv_7 = BitVectorNew::ones(4);
+    let bv_7_2 = BitVectorNew::from_bits(vec![true, true, true, true]);
+    assert! (bv.bits.contains(0));
+    assert! (!bv.bits.contains(1));
+    assert! (bv.bits.contains(2));
+    assert! (bv.bits.contains(3));
+    assert! (!naive_test_eq(&bv, &bv_7));
+    assert! (naive_test_eq(&bv_7, &bv_7_2));
+  }
+
+  #[test]
+  fn test_slices() {
+    let bv_3 = BitVectorNew::from_bits(vec![true, true, false]);
+    let bv_5 = BitVectorNew::from_bits(vec![true, false, true]);
+    
+    let bv_3_longer = BitVectorNew::from_bits(vec![true, true, false, false, false]);
+
+    assert! (naive_test_eq(&BitVectorNew::sign_extend(&bv_3, 2), &bv_3_longer));
+    assert! (naive_test_eq(&BitVectorNew::zero_extend(&bv_3, 2), &bv_3_longer));
+
+    assert! (naive_test_eq(&BitVectorNew::sign_extend(&bv_5, 2), &BitVectorNew::from_bits(vec![true, false, true, true, true])));
+    assert! (naive_test_eq(&BitVectorNew::zero_extend(&bv_5, 3), &BitVectorNew::from_bits(vec![true, false, true, false, false, false])));
+
+    assert! (naive_test_eq(&BitVectorNew::slice(&bv_5, 1, 1), &BitVectorNew::from_bits(vec![true])));
+    assert! (naive_test_eq(&BitVectorNew::slice(&bv_5, 1, 3), &bv_5));
+    assert! (naive_test_eq(&BitVectorNew::slice(&bv_3_longer, 2, 5), &BitVectorNew::from_bits(vec![true, false, false, false])));
+  }
+
+}
