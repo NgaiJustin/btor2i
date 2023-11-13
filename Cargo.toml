@@ -12,6 +12,7 @@ num-bigint = "0.4.4"
 num-traits = "0.2.17"
 bitvector = "0.1.5"
 tempfile = "3.8.1"
+thiserror = "1.0.50"
 
 [dependencies.btor2tools]
 path = "btor2tools.rs"

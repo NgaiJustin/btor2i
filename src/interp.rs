@@ -1,3 +1,4 @@
+use crate::error::InterpError;
 use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
@@ -8,6 +9,7 @@ struct Environment {
   // TODO: valid programs should not have the same identifier in both sets, but we don't currently check that
   // TODO: perhaps could opportunistically free mappings if we know they won't be used again
   env: Vec<Value>,
+  args: HashMap<String, usize>,
 }
 
 impl Environment {
@@ -15,6 +17,7 @@ impl Environment {
     Self {
       // Allocate a larger stack size so the interpreter needs to allocate less often
       env: vec![Value::default(); size],
+      args: HashMap::new(),
     }
   }
 
@@ -67,6 +70,35 @@ fn interpret(prog_iterator: Btor2LineIterator, _env: Environment) {
       _ => (),
     }
   })
+}
+
+fn parse_args(
+  mut env: Environment,
+  arg_names: &[String],
+  inputs: &[String],
+) -> Result<Environment, InterpError> {
+  if arg_names.is_empty() && inputs.is_empty() {
+    Ok(env)
+  } else if inputs.len() != arg_names.len() {
+    Err(InterpError::BadNumFuncArgs(arg_names.len(), inputs.len()))
+  } else {
+    arg_names.iter().try_for_each(|arg| {
+      // arg in the form "x=1", extract variable name and value
+      let mut split = arg.split('=');
+      let arg_name = split.next().unwrap();
+      let arg_val = split.next().unwrap();
+
+      // try to parse the input as a number
+      let arg_as_num = arg_val
+        .parse::<usize>()
+        .map_err(|_| InterpError::BadFuncArgType((*arg_val).to_string()))?;
+
+      env.args.insert(arg_name.to_string(), arg_as_num);
+
+      Ok(())
+    })?;
+    Ok(env)
+  }
 }
 
 // mapping from line #s to sorts
