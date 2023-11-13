@@ -311,7 +311,7 @@ impl BitVectorNew {
   }
 
   pub fn neg(bv: &BitVectorNew) -> Self {
-    BitVectorNew::inc(&BitVectorNew::not(&bv))
+    BitVectorNew::inc(&BitVectorNew::not(bv))
   }
 
   pub fn redand(bv: &BitVectorNew) -> bool {
@@ -337,17 +337,16 @@ mod tests {
 
   fn naive_test_eq(bv1: &BitVectorNew, bv2: &BitVectorNew) -> bool {
     for i in &bv1.bits {
-        if (!(bv2.bits.contains(i))) {
+        if !(bv2.bits.contains(i)) {
             return false;
         }
     }
     for i in &bv2.bits {
-        if (!(bv1.bits.contains(i))) {
+        if !(bv1.bits.contains(i)) {
             return false;
         }
     }
-    if (bv1.width != bv2.width) {return false;}
-    else {return true}
+    bv1.width == bv2.width
   }
 
   #[test]
