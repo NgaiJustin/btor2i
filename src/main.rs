@@ -50,5 +50,5 @@ fn main() {
   println!("{:?}", env);
 
   let prog_iterator = Btor2Parser::new().read_lines(&btor2_file).unwrap();
-  interpret(prog_iterator, env);
+  // interp::interpret(prog_iterator, env);
 }
