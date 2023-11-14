@@ -8,7 +8,7 @@ pub struct CLI {
   #[arg(short, long, action)]
   pub file: Option<String>,
 
-  /// Arguments for the main function
+  /// Inputs for the main function
   #[arg(action)]
-  pub args: Vec<String>,
+  pub inputs: Vec<String>,
 }
