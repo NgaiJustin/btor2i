@@ -3,8 +3,11 @@ use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
 use std::collections::HashMap;
+use std::fmt::format;
 
-struct Environment {
+// TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
+#[derive(Debug)]
+pub struct Environment {
   // Maps sid/nid to value
   // TODO: valid programs should not have the same identifier in both sets, but we don't currently check that
   // TODO: perhaps could opportunistically free mappings if we know they won't be used again
@@ -32,15 +35,17 @@ impl Environment {
   }
 }
 
+// TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
 #[derive(Debug, Default, Clone)]
-enum Value {
-  BitVectorNew,
+pub enum Value {
+  BitVector,
   // TODO: Add support for <STATE>
   #[default]
   Uninitialized,
 }
 
-fn interpret(prog_iterator: Btor2LineIterator, _env: Environment) {
+fn interpret(prog_iterator: Btor2LineIterator, _env: Environment) -> Result<(), InterpError> {
+  // HashMap<String, usize>
   // for now, we only deal with bitvec sorts
   // map will be from line number to size of sort
   let mut sorts_map = HashMap::<i64, u32>::new();
@@ -67,12 +72,108 @@ fn interpret(prog_iterator: Btor2LineIterator, _env: Environment) {
         }
       }
 
-      _ => (),
+      // core
+      btor2tools::Btor2Tag::Const => Ok(()),
+      btor2tools::Btor2Tag::Constd => Ok(()),
+      btor2tools::Btor2Tag::Consth => Ok(()),
+      btor2tools::Btor2Tag::Input => Ok(()),
+      btor2tools::Btor2Tag::Output => Ok(()),
+      // btor2tools::Btor2Tag::Sort => Ok(()),
+      btor2tools::Btor2Tag::One => Ok(()),
+      btor2tools::Btor2Tag::Ones => Ok(()),
+      btor2tools::Btor2Tag::Zero => Ok(()),
+
+      // indexed
+      btor2tools::Btor2Tag::Sext => Ok(()),
+      btor2tools::Btor2Tag::Uext => Ok(()),
+      btor2tools::Btor2Tag::Slice => Ok(()),
+
+      // unary
+      btor2tools::Btor2Tag::Not => Ok(()),
+      btor2tools::Btor2Tag::Inc => Ok(()),
+      btor2tools::Btor2Tag::Dec => Ok(()),
+      btor2tools::Btor2Tag::Neg => Ok(()),
+      btor2tools::Btor2Tag::Redand => Ok(()),
+      btor2tools::Btor2Tag::Redor => Ok(()),
+      btor2tools::Btor2Tag::Redxor => Ok(()),
+
+      // binary - boolean
+      btor2tools::Btor2Tag::Iff => Ok(()),
+      btor2tools::Btor2Tag::Implies => Ok(()),
+
+      // binary - (dis)equality
+      btor2tools::Btor2Tag::Eq => Ok(()),
+      btor2tools::Btor2Tag::Neq => Ok(()),
+
+      // binary - (un)signed inequality
+      btor2tools::Btor2Tag::Sgt => Ok(()),
+      btor2tools::Btor2Tag::Sgte => Ok(()),
+      btor2tools::Btor2Tag::Slt => Ok(()),
+      btor2tools::Btor2Tag::Slte => Ok(()),
+      btor2tools::Btor2Tag::Ugt => Ok(()),
+      btor2tools::Btor2Tag::Ugte => Ok(()),
+      btor2tools::Btor2Tag::Ult => Ok(()),
+      btor2tools::Btor2Tag::Ulte => Ok(()),
+
+      // binary - bit-wise
+      btor2tools::Btor2Tag::And => Ok(()),
+      btor2tools::Btor2Tag::Nand => Ok(()),
+      btor2tools::Btor2Tag::Nor => Ok(()),
+      btor2tools::Btor2Tag::Or => Ok(()),
+      btor2tools::Btor2Tag::Xnor => Ok(()),
+      btor2tools::Btor2Tag::Xor => Ok(()),
+
+      // binary - rotate, shift
+      btor2tools::Btor2Tag::Rol => Ok(()),
+      btor2tools::Btor2Tag::Ror => Ok(()),
+      btor2tools::Btor2Tag::Sll => Ok(()),
+      btor2tools::Btor2Tag::Sra => Ok(()),
+      btor2tools::Btor2Tag::Srl => Ok(()),
+
+      // binary - arithmetic
+      btor2tools::Btor2Tag::Add => Ok(()),
+      btor2tools::Btor2Tag::Mul => Ok(()),
+      btor2tools::Btor2Tag::Sdiv => Ok(()),
+      btor2tools::Btor2Tag::Udiv => Ok(()),
+      btor2tools::Btor2Tag::Smod => Ok(()),
+      btor2tools::Btor2Tag::Srem => Ok(()),
+      btor2tools::Btor2Tag::Urem => Ok(()),
+      btor2tools::Btor2Tag::Sub => Ok(()),
+
+      // binary - overflow
+      btor2tools::Btor2Tag::Saddo => Ok(()),
+      btor2tools::Btor2Tag::Uaddo => Ok(()),
+      btor2tools::Btor2Tag::Sdivo => Ok(()),
+      // btor2tools::Btor2Tag::Udivo => Ok(()),    Unsigned division never overflows :D
+      btor2tools::Btor2Tag::Smulo => Ok(()),
+      btor2tools::Btor2Tag::Umulo => Ok(()),
+      btor2tools::Btor2Tag::Ssubo => Ok(()),
+      btor2tools::Btor2Tag::Usubo => Ok(()),
+
+      // binary - concat
+      btor2tools::Btor2Tag::Concat => Ok(()),
+
+      // ternary - conditional
+      btor2tools::Btor2Tag::Ite => Ok(()),
+
+      // Unsupported: arrays, state, assertions
+      btor2tools::Btor2Tag::Bad
+      | btor2tools::Btor2Tag::Constraint
+      | btor2tools::Btor2Tag::Fair
+      | btor2tools::Btor2Tag::Init
+      | btor2tools::Btor2Tag::Justice
+      | btor2tools::Btor2Tag::Next
+      | btor2tools::Btor2Tag::State
+      | btor2tools::Btor2Tag::Read
+      | btor2tools::Btor2Tag::Write => Err(InterpError::Unsupported(format!("{:?}", tag))),
     }
-  })
+  });
+
+  Ok(())
 }
 
-fn parse_args(
+// TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
+pub fn parse_inputs(
   mut env: Environment,
   arg_names: &[String],
   inputs: &[String],
@@ -82,9 +183,9 @@ fn parse_args(
   } else if inputs.len() != arg_names.len() {
     Err(InterpError::BadNumFuncArgs(arg_names.len(), inputs.len()))
   } else {
-    arg_names.iter().try_for_each(|arg| {
+    inputs.iter().try_for_each(|input| {
       // arg in the form "x=1", extract variable name and value
-      let mut split = arg.split('=');
+      let mut split = input.split('=');
       let arg_name = split.next().unwrap();
       let arg_val = split.next().unwrap();
 
