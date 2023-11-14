@@ -12,6 +12,9 @@ pub enum InterpError {
 
   #[error("Expected int args, found `{0}`")]
   BadFuncArgType(String), // (actual)
+
+  #[error("Not currently supported: `{0}`")]
+  Unsupported(String), // (feature)
 }
 
 impl InterpError {
