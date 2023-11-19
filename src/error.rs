@@ -13,6 +13,9 @@ pub enum InterpError {
   #[error("Expected int args, found `{0}`")]
   BadFuncArgType(String), // (actual)
 
+  #[error("Expected {0} with width {1}, found `{2}`")]
+  BadFuncArgWidth(String, usize, usize), // (name, expected, actual)
+
   #[error("Not currently supported: `{0}`")]
   Unsupported(String), // (feature)
 }
@@ -23,3 +26,5 @@ impl InterpError {
   //   // TODO: Support PositionalInterpError in the future
   // }
 }
+
+pub type InterpResult<T> = Result<T, InterpError>;
