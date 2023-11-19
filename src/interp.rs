@@ -193,13 +193,41 @@ pub fn interpret(
 
         Ok(())
       }
-      btor2tools::Btor2Tag::Mul => Ok(()),
+      btor2tools::Btor2Tag::Mul => {
+        assert_eq!(line.args().len(), 2);
+        let arg1 = _env.get(line.args()[0] as usize);
+        let arg2 = _env.get(line.args()[1] as usize);
+        if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+          let result = BitVector::mul(arg1, arg2);
+          _env.set(id.try_into().unwrap(), Value::BitVector(result));
+        } else {
+          return Err(error::InterpError::Unsupported(format!(
+            "Multiplication of {:?} and {:?} is not supported",
+            arg1, arg2
+          )));
+        }
+        Ok(())
+      },
       btor2tools::Btor2Tag::Sdiv => Ok(()),
       btor2tools::Btor2Tag::Udiv => Ok(()),
       btor2tools::Btor2Tag::Smod => Ok(()),
       btor2tools::Btor2Tag::Srem => Ok(()),
       btor2tools::Btor2Tag::Urem => Ok(()),
-      btor2tools::Btor2Tag::Sub => Ok(()),
+      btor2tools::Btor2Tag::Sub => {
+        assert_eq!(line.args().len(), 2);
+        let arg1 = _env.get(line.args()[0] as usize);
+        let arg2 = _env.get(line.args()[1] as usize);
+        if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+          let result = BitVector::sub(arg1, arg2);
+          _env.set(id.try_into().unwrap(), Value::BitVector(result));
+        } else {
+          return Err(error::InterpError::Unsupported(format!(
+            "Subtraction of {:?} and {:?} is not supported",
+            arg1, arg2
+          )));
+        }
+        Ok(())
+      },
 
       // binary - overflow
       btor2tools::Btor2Tag::Saddo => Ok(()),
