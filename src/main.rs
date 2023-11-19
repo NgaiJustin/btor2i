@@ -1,4 +1,5 @@
 use btor2i::cli;
+use btor2i::error::InterpResult;
 use btor2i::interp;
 use btor2tools::Btor2Parser;
 use clap::Parser;
@@ -7,7 +8,7 @@ use std::io;
 use std::path::Path;
 use tempfile::NamedTempFile;
 
-fn main() {
+fn main() -> InterpResult<()> {
   let args = cli::CLI::parse();
 
   let btor2_file = match args.file.clone() {
@@ -49,6 +50,12 @@ fn main() {
   // Main interpreter loop
   println!("{:?}", env);
 
-  let prog_iterator = Btor2Parser::new().read_lines(&btor2_file).unwrap();
-  // interp::interpret(prog_iterator, env);
+  let mut parser = Btor2Parser::new();
+  let prog_iterator = parser.read_lines(&btor2_file).unwrap();
+
+  let env = interp::interpret(prog_iterator, env)?;
+
+  println!("{:?}", env);
+
+  Ok(())
 }
