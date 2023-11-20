@@ -31,8 +31,8 @@ impl BitVector {
       bits: BVec::new(bits.len()),
       width: bits.len(),
     };
-    for i in 0..ans.width {
-      if bits[i] {
+    for (i, bit) in bits.iter().enumerate() {
+      if *bit {
         ans.bits.insert(i);
       }
     }
@@ -147,17 +147,17 @@ impl BitVector {
     todo!()
   }
 
-  pub fn eq(bv1: &BitVector, bv2: &BitVector) -> bool {
-    if bv1.bits.len() != bv2.bits.len() {
-      return false;
-    }
-    for i in &bv1.bits {
-      if !(bv2.bits.contains(i)) {
-        return false;
-      }
-    }
-    true
-  }
+  // pub fn eq(bv1: &BitVector, bv2: &BitVector) -> bool {
+  //   if bv1.bits.len() != bv2.bits.len() {
+  //     return false;
+  //   }
+  //   for i in &bv1.bits {
+  //     if !(bv2.bits.contains(i)) {
+  //       return false;
+  //     }
+  //   }
+  //   true
+  // }
 
   pub fn neq(bv1: &BitVector, bv2: &BitVector) -> bool {
     if bv1.bits.len() != bv2.bits.len() {
