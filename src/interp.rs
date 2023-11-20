@@ -170,7 +170,9 @@ pub fn interpret(
         match sort.tag() {
           Btor2SortTag::Bitvec => {
             if let Btor2SortContent::Bitvec { width } = sort.content() {
-              let one = BitVector::from_bits(vec![true; width as usize]);
+              // bitvec with one bit set to 1
+              let zero = BitVector::zeros(width as usize);
+              let one = BitVector::inc(&zero);
               _env.set(id.try_into().unwrap(), Value::BitVector(one));
             };
             Ok(())
