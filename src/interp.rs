@@ -94,18 +94,18 @@ impl fmt::Display for Value {
 }
 
 pub fn interpret(
-  prog_iterator: Btor2LineIterator,
-  mut _env: Environment,
-) -> Result<Environment, InterpError> {
+  mut prog_iterator: Btor2LineIterator,
+  _env: &mut Environment,
+) -> Result<(), InterpError> {
   // HashMap<String, usize>
   // for now, we only deal with bitvec sorts
   // map will be from line number to size of sort
   let mut sorts_map = HashMap::<i64, u32>::new();
 
-  for line in prog_iterator {
+  prog_iterator.try_for_each(|line| {
     let id = line.id();
     let tag = line.tag();
-    let line_res = match tag {
+    match tag {
       // core
       btor2tools::Btor2Tag::Sort => {
         let sort = line.sort();
@@ -311,10 +311,7 @@ pub fn interpret(
       | btor2tools::Btor2Tag::Read
       | btor2tools::Btor2Tag::Write => Err(error::InterpError::Unsupported(format!("{:?}", tag))),
     }
-    .map_err(|e| (e.to_string()));
-  }
-
-  Ok(_env)
+  })
 }
 
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
