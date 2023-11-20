@@ -2,7 +2,7 @@ use std::ops::{Add, Mul, Neg};
 
 use bitvector::BitVector as BVec;
 use num_bigint::{BigInt, BigUint};
-use num_traits::{CheckedSub, One, Zero};
+use num_traits::{One, Zero};
 
 #[derive(Debug, Clone)]
 pub struct BitVector {
@@ -455,39 +455,37 @@ mod tests {
 
   #[test]
   fn test_unsigned_arithmetic_small() {
-    let MAX = 256;
-    let SIZE = 8;
+    let max = 256;
+    let size = 8;
 
     let mut unsigned_numbers: Vec<BitVector> = Vec::new();
-    unsigned_numbers.push(BitVector::zeros(SIZE));
-    for _i in 1..MAX {
+    unsigned_numbers.push(BitVector::zeros(size));
+    for _i in 1..max {
       unsigned_numbers.push(BitVector::inc(unsigned_numbers.last().unwrap()));
     }
 
-    for i in 0..MAX {
-      for j in 0..MAX {
+    for i in 0..max {
+      for j in 0..max {
         let sum = BitVector::add(&unsigned_numbers[i], &unsigned_numbers[j]);
         let diff = BitVector::sub(&unsigned_numbers[i], &unsigned_numbers[j]);
         let prod = BitVector::mul(&unsigned_numbers[i], &unsigned_numbers[j]);
-        let sub_index = if i >= j { i - j } else { i + MAX - j };
-        assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % MAX]));
-        assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % MAX]));
-        assert!(naive_test_eq(&prod, &unsigned_numbers[(i * j) % MAX]));
-        if (i < j) {
+        let sub_index = if i >= j { i - j } else { i + max - j };
+        assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % max]));
+        assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % max]));
+        assert!(naive_test_eq(&prod, &unsigned_numbers[(i * j) % max]));
+        if i < j {
           assert!(BitVector::ult(&unsigned_numbers[i], &unsigned_numbers[j]));
         }
-        if (i <= j) {
+        if i <= j {
           assert!(BitVector::ulte(&unsigned_numbers[i], &unsigned_numbers[j]));
         }
-        if (i > j) {
+        if i > j {
           assert!(BitVector::ugt(&unsigned_numbers[i], &unsigned_numbers[j]));
         }
-        if (i >= j) {
+        if i >= j {
           assert!(BitVector::ugte(&unsigned_numbers[i], &unsigned_numbers[j]));
         }
       }
     }
   }
-
-  fn test_signed_arithmetic_small() {}
 }
