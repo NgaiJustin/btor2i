@@ -51,21 +51,21 @@ impl fmt::Display for Environment {
     let mut sorted_args = self.args.iter().collect::<Vec<_>>();
     sorted_args.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
     sorted_args.iter().try_for_each(|(name, val)| {
-      write!(f, "{}: {}\n", name, val)?;
+      writeln!(f, "{}: {}", name, val)?;
       Ok(())
     })?;
 
     write!(f, "\nEnvironment:\n")?;
     // don't print uninitialized values
     self.env.iter().enumerate().try_for_each(|(idx, val)| {
-      write!(f, "{}: {}\n", idx, val)?;
+      writeln!(f, "{}: {}", idx, val)?;
       Ok(())
     })?;
 
     write!(f, "\nOutput:\n")?;
     self.output.iter().try_for_each(|(name, val)| {
       if let Value::BitVector(bv) = val {
-        write!(f, "{}: {:?}", name, bv)?;
+        writeln!(f, "{}: {:?}", name, bv)?;
       }
       Ok(())
     })?;

@@ -61,3 +61,4 @@ Environment:
 
 Output:
 fibout: BitVector { bits: [10110001000110010010010011100001 ], width: 32 }
+
