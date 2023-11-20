@@ -17,6 +17,5 @@ thiserror = "1.0.50"
 [dependencies.btor2tools]
 path = "btor2tools.rs"
 
-
 [profile.release]
 debug = true
