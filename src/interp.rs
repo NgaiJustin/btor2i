@@ -186,7 +186,7 @@ pub fn interpret(
           _env.set(id.try_into().unwrap(), Value::BitVector(result));
         } else {
           return Err(error::InterpError::Unsupported(format!(
-            "Addition of {:?} and {:?} is not supported",
+            "Addition of {:?} and {:?}",
             arg1, arg2
           )));
         }
@@ -202,12 +202,12 @@ pub fn interpret(
           _env.set(id.try_into().unwrap(), Value::BitVector(result));
         } else {
           return Err(error::InterpError::Unsupported(format!(
-            "Multiplication of {:?} and {:?} is not supported",
+            "Multiplication of {:?} and {:?}",
             arg1, arg2
           )));
         }
         Ok(())
-      },
+      }
       btor2tools::Btor2Tag::Sdiv => Ok(()),
       btor2tools::Btor2Tag::Udiv => Ok(()),
       btor2tools::Btor2Tag::Smod => Ok(()),
@@ -222,12 +222,12 @@ pub fn interpret(
           _env.set(id.try_into().unwrap(), Value::BitVector(result));
         } else {
           return Err(error::InterpError::Unsupported(format!(
-            "Subtraction of {:?} and {:?} is not supported",
+            "Subtraction of {:?} and {:?}",
             arg1, arg2
           )));
         }
         Ok(())
-      },
+      }
 
       // binary - overflow
       btor2tools::Btor2Tag::Saddo => Ok(()),
