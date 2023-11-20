@@ -48,14 +48,12 @@ fn main() -> InterpResult<()> {
   };
 
   // Main interpreter loop
-  println!("{:?}", env);
-
   let mut parser = Btor2Parser::new();
   let prog_iterator = parser.read_lines(&btor2_file).unwrap();
 
   let env = interp::interpret(prog_iterator, env)?;
 
-  println!("{:?}", env);
+  println!("{}", env);
 
   Ok(())
 }

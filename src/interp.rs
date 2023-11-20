@@ -5,6 +5,7 @@ use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
 use std::collections::HashMap;
+use std::fmt;
 
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
 #[derive(Debug)]
@@ -42,6 +43,34 @@ impl Environment {
   }
 }
 
+impl fmt::Display for Environment {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    // iterate over self.args, self.env, self.output
+    write!(f, "Arguments:\n")?;
+    self
+      .args
+      .iter()
+      .try_for_each(|(name, val)| write!(f, "{}: {}\n", name, val))?;
+
+    write!(f, "\nEnvironment:\n")?;
+    // don't print uninitialized values
+    self.env.iter().enumerate().try_for_each(|(idx, val)| {
+      write!(f, "{}: {}\n", idx, val)?;
+      Ok(())
+    })?;
+
+    write!(f, "\nOutput:\n")?;
+    self.output.iter().try_for_each(|(name, val)| {
+      if let Value::BitVector(bv) = val {
+        write!(f, "{}: {:?}", name, bv)?;
+      }
+      Ok(())
+    })?;
+
+    Ok(())
+  }
+}
+
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
 #[derive(Debug, Default, Clone)]
 pub enum Value {
@@ -50,6 +79,15 @@ pub enum Value {
   // TODO: Add support for <ARRAY>
   #[default]
   Uninitialized,
+}
+
+impl fmt::Display for Value {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    match self {
+      Value::BitVector(bv) => write!(f, "{:?}", bv),
+      Value::Uninitialized => write!(f, "_"),
+    }
+  }
 }
 
 pub fn interpret(
