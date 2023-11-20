@@ -28,10 +28,7 @@ fn main() -> InterpResult<()> {
   let arg_names = Btor2Parser::new()
     .read_lines(&btor2_file)
     .unwrap()
-    .filter(|line| match line.tag() {
-      btor2tools::Btor2Tag::Input => true,
-      _ => false,
-    })
+    .filter(|line| matches!(line.tag(), btor2tools::Btor2Tag::Input))
     .map(|line| line.symbol().unwrap().to_string_lossy().into_owned()) // this is safe since all inputs have symbols
     .collect::<Vec<_>>();
 
