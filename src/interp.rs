@@ -165,7 +165,19 @@ pub fn interpret(
         Ok(())
       }
       // btor2tools::Btor2Tag::Sort => Ok(()),
-      btor2tools::Btor2Tag::One => Ok(()),
+      btor2tools::Btor2Tag::One => {
+        let sort = line.sort();
+        match sort.tag() {
+          Btor2SortTag::Bitvec => {
+            if let Btor2SortContent::Bitvec { width } = sort.content() {
+              let one = BitVector::from_bits(vec![true; width as usize]);
+              _env.set(id.try_into().unwrap(), Value::BitVector(one));
+            };
+            Ok(())
+          }
+          Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!("{:?}", sort.tag()))),
+        }
+      }
       btor2tools::Btor2Tag::Ones => Ok(()),
       btor2tools::Btor2Tag::Zero => Ok(()),
 
