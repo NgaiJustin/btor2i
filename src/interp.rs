@@ -45,12 +45,15 @@ impl Environment {
 
 impl fmt::Display for Environment {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    // iterate over self.args, self.env, self.output
+    // iterate over self.args in order and print them
+
     write!(f, "Arguments:\n")?;
-    self
-      .args
-      .iter()
-      .try_for_each(|(name, val)| write!(f, "{}: {}\n", name, val))?;
+    let mut sorted_args = self.args.iter().collect::<Vec<_>>();
+    sorted_args.sort_by(|(name1, _), (name2, _)| name1.cmp(name2));
+    sorted_args.iter().try_for_each(|(name, val)| {
+      write!(f, "{}: {}\n", name, val)?;
+      Ok(())
+    })?;
 
     write!(f, "\nEnvironment:\n")?;
     // don't print uninitialized values

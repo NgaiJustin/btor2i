@@ -10,6 +10,7 @@ Environment:
 4: BitVector { bits: [1 ], width: 1 }
 5: _
 6: _
+7: _
 
 Output:
 out: BitVector { bits: [1 ], width: 1 }
