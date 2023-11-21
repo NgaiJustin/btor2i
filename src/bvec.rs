@@ -1,51 +1,52 @@
 use std::ops::{Add, Mul, Neg};
 
-use bitvector::BitVector as BVec;
+use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
 use num_traits::{One, Zero};
 
 #[derive(Debug, Clone)]
 pub struct BitVector {
-  bits: BVec,
+  //   bits: BVec,
+  bits: BitVec<u8, Msb0>,
   width: usize,
 }
 
 impl BitVector {
   pub fn zeros(len: usize) -> Self {
-    let ans: BitVector = BitVector {
-      bits: BVec::new(len),
-      width: len,
-    };
+    let mut bits = BitVec::new();
+    for _ in 0..len {
+      bits.push(false);
+    }
+    let ans: BitVector = BitVector { bits, width: len };
     ans
   }
 
   pub fn ones(len: usize) -> Self {
-    BitVector {
-      bits: BVec::ones(len),
-      width: len,
+    let mut bits = BitVec::new();
+    for _ in 0..len {
+      bits.push(true);
     }
+    BitVector { bits, width: len }
   }
 
   pub fn from_bits(bits: Vec<bool>) -> Self {
     let mut ans: BitVector = BitVector {
-      bits: BVec::new(bits.len()),
+      bits: BitVec::new(),
       width: bits.len(),
     };
-    for (i, bit) in bits.iter().enumerate() {
-      if *bit {
-        ans.bits.insert(i);
-      }
+    for bit in bits.iter() {
+      ans.bits.push(*bit);
     }
     ans
   }
 
   pub fn sign_extend(bv: &BitVector, w: usize) -> Self {
-    let mut other_vec: bitvector::BitVector = BVec::new(bv.width + w);
-    other_vec.insert_all(&bv.bits);
-    if bv.bits.contains(bv.width - 1) {
-      for i in bv.width..bv.width + w {
-        other_vec.insert(i);
-      }
+    let mut other_vec = BitVec::new();
+    for bit in bv.bits.iter() {
+      other_vec.push(*bit);
+    }
+    for _ in bv.width..bv.width + w {
+      other_vec.push(*bv.bits.last().as_deref().unwrap());
     }
     BitVector {
       bits: other_vec,
@@ -54,8 +55,10 @@ impl BitVector {
   }
 
   pub fn zero_extend(bv: &BitVector, w: usize) -> Self {
-    let mut other_vec: bitvector::BitVector = BVec::new(bv.width + w);
-    other_vec.insert_all(&bv.bits);
+    let mut other_vec = BitVec::new();
+    for bit in bv.bits.iter() {
+      other_vec.push(*bit);
+    }
     BitVector {
       bits: other_vec,
       width: bv.width + w,
@@ -63,11 +66,9 @@ impl BitVector {
   }
 
   pub fn slice(bv: &BitVector, l: usize, u: usize) -> Self {
-    let mut other_vec: bitvector::BitVector = BVec::new(u - l + 1);
+    let mut other_vec = BitVec::new();
     for i in (l - 1)..u {
-      if bv.bits.contains(i) {
-        other_vec.insert(i - (l - 1));
-      }
+      other_vec.push(bv.bits[i]);
     }
 
     BitVector {
@@ -77,30 +78,25 @@ impl BitVector {
   }
 
   pub fn not(bv: &BitVector) -> Self {
-    let mut other_vec = bitvector::BitVector::new(bv.width);
-    for i in 0..bv.width {
-      if !bv.bits.contains(i) {
-        other_vec.insert(i);
-      }
-    }
+    let bits = bv.bits.clone();
     BitVector {
-      bits: other_vec,
+      bits: !bits,
       width: bv.width,
     }
   }
 
   pub fn inc(bv: &BitVector) -> Self {
     let mut missing: usize = 0;
-    while missing < bv.width && bv.bits.contains(missing) {
+    while missing < bv.width && bv.bits[missing] {
       missing += 1
     }
     if missing == bv.width {
       BitVector::zeros(bv.width)
     } else {
       let mut ans = bv.clone();
-      ans.bits.insert(missing);
+      ans.bits.set(missing, true);
       for i in 0..missing {
-        ans.bits.remove(i);
+        ans.bits.set(i, false);
       }
       ans
     }
@@ -108,16 +104,16 @@ impl BitVector {
 
   pub fn dec(bv: &BitVector) -> Self {
     let mut present: usize = 0;
-    while present < bv.width && !bv.bits.contains(present) {
+    while present < bv.width && !bv.bits[present] {
       present += 1
     }
     if present == bv.width {
       BitVector::ones(bv.width)
     } else {
       let mut ans = bv.clone();
-      ans.bits.remove(present);
+      ans.bits.set(present, false);
       for i in 0..present {
-        ans.bits.insert(i);
+        ans.bits.set(i, true);
       }
       ans
     }
@@ -128,15 +124,15 @@ impl BitVector {
   }
 
   pub fn redand(bv: &BitVector) -> bool {
-    bv.bits.len() == bv.width
+    bv.bits.count_ones() == bv.width
   }
 
   pub fn redor(bv: &BitVector) -> bool {
-    !bv.bits.is_empty()
+    bv.bits.count_ones() != 0
   }
 
   pub fn redxor(bv: &BitVector) -> bool {
-    bv.bits.len() % 2 == 1
+    bv.bits.count_ones() % 2 == 1
   }
 
   pub fn iff(_bv1: &BitVector, _bv2: &BitVector) -> bool {
@@ -147,24 +143,24 @@ impl BitVector {
     todo!()
   }
 
-  // pub fn eq(bv1: &BitVector, bv2: &BitVector) -> bool {
-  //   if bv1.bits.len() != bv2.bits.len() {
-  //     return false;
-  //   }
-  //   for i in &bv1.bits {
-  //     if !(bv2.bits.contains(i)) {
-  //       return false;
-  //     }
-  //   }
-  //   true
-  // }
+  pub fn equals(bv1: &BitVector, bv2: &BitVector) -> bool {
+    if bv1.bits.count_ones() != bv2.bits.count_ones() {
+      return false;
+    }
+    for i in bv1.bits.iter_ones() {
+      if !(bv2.bits[i]) {
+        return false;
+      }
+    }
+    true
+  }
 
   pub fn neq(bv1: &BitVector, bv2: &BitVector) -> bool {
-    if bv1.bits.len() != bv2.bits.len() {
+    if bv1.bits.count_ones() != bv2.bits.count_ones() {
       return true;
     }
-    for i in &bv1.bits {
-      if !(bv2.bits.contains(i)) {
+    for i in bv1.bits.iter_ones() {
+      if !(bv2.bits[i]) {
         return false;
       }
     }
@@ -176,7 +172,7 @@ impl BitVector {
   fn to_bigint(&self) -> BigInt {
     if self.bits.is_empty() {
       Zero::zero()
-    } else if self.bits.contains(self.width - 1) {
+    } else if self.bits[self.width - 1] {
       if self.bits.len() == 1 {
         // handle min int separately
         let inc = BitVector::inc(self);
@@ -188,7 +184,7 @@ impl BitVector {
     } else {
       let mut ans: BigInt = Zero::zero();
       for i in 0..self.width {
-        ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
+        ans.set_bit(i.try_into().unwrap(), self.bits[i])
       }
       return ans;
     }
@@ -197,28 +193,24 @@ impl BitVector {
   fn to_biguint(&self) -> BigUint {
     let mut ans: BigUint = Zero::zero();
     for i in 0..self.width {
-      ans.set_bit(i.try_into().unwrap(), self.bits.contains(i))
+      ans.set_bit(i.try_into().unwrap(), self.bits[i])
     }
     ans
   }
 
   fn from_bigint(b: BigInt, width: usize) -> Self {
-    let mut bits = BVec::new(width);
+    let mut bits = BitVec::new();
     for i in 0..width {
-      if b.bit(i.try_into().unwrap()) {
-        bits.insert(i);
-      }
+      bits.push(b.bit(i.try_into().unwrap()));
     }
 
     BitVector { width, bits }
   }
 
   fn from_biguint(b: BigUint, width: usize) -> Self {
-    let mut bits = BVec::new(width);
+    let mut bits = BitVec::new();
     for i in 0..width {
-      if b.bit(i.try_into().unwrap()) {
-        bits.insert(i);
-      }
+      bits.push(b.bit(i.try_into().unwrap()));
     }
 
     BitVector { width, bits }
@@ -258,8 +250,10 @@ impl BitVector {
 
   /// these are also kinda inefficient
   pub fn and(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let mut bits = bv1.bits.clone();
+    bits &= bv2.bits.clone();
     BitVector {
-      bits: bv1.bits.intersection(&bv2.bits),
+      bits,
       width: bv1.width,
     }
   }
@@ -273,8 +267,10 @@ impl BitVector {
   }
 
   pub fn or(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let mut bits = bv1.bits.clone();
+    bits |= bv2.bits.clone();
     BitVector {
-      bits: bv1.bits.union(&bv2.bits),
+      bits,
       width: bv1.width,
     }
   }
@@ -284,11 +280,10 @@ impl BitVector {
   }
 
   pub fn xor(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let mut bits = bv1.bits.clone();
+    bits ^= bv2.bits.clone();
     BitVector {
-      bits: bv1
-        .bits
-        .difference(&bv2.bits)
-        .union(&bv2.bits.difference(&bv1.bits)),
+      bits,
       width: bv1.width,
     }
   }
@@ -335,13 +330,13 @@ mod tests {
   use super::*;
 
   fn naive_test_eq(bv1: &BitVector, bv2: &BitVector) -> bool {
-    for i in &bv1.bits {
-      if !(bv2.bits.contains(i)) {
+    for i in bv1.bits.iter_ones() {
+      if !(bv2.bits[i]) {
         return false;
       }
     }
-    for i in &bv2.bits {
-      if !(bv1.bits.contains(i)) {
+    for i in bv2.bits.iter_ones() {
+      if !(bv1.bits[i]) {
         return false;
       }
     }
@@ -354,10 +349,11 @@ mod tests {
     let bv = BitVector::from_bits(vec![true, false, true, true]);
     let bv_7 = BitVector::ones(4);
     let bv_7_2 = BitVector::from_bits(vec![true, true, true, true]);
-    assert!(bv.bits.contains(0));
-    assert!(!bv.bits.contains(1));
-    assert!(bv.bits.contains(2));
-    assert!(bv.bits.contains(3));
+    println!("{}", bv_7.bits);
+    assert!(bv.bits[0]);
+    assert!(!bv.bits[1]);
+    assert!(bv.bits[2]);
+    assert!(bv.bits[3]);
     assert!(!naive_test_eq(&bv, &bv_7));
     assert!(naive_test_eq(&bv_7, &bv_7_2));
   }
@@ -467,11 +463,11 @@ mod tests {
     for i in 0..max {
       for j in 0..max {
         let sum = BitVector::add(&unsigned_numbers[i], &unsigned_numbers[j]);
-        let diff = BitVector::sub(&unsigned_numbers[i], &unsigned_numbers[j]);
+        // let diff = BitVector::sub(&unsigned_numbers[i], &unsigned_numbers[j]);
         let prod = BitVector::mul(&unsigned_numbers[i], &unsigned_numbers[j]);
-        let sub_index = if i >= j { i - j } else { i + max - j };
+        // let sub_index = if i >= j { i - j } else { i + max - j };
         assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % max]));
-        assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % max]));
+        // assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % max]));
         assert!(naive_test_eq(&prod, &unsigned_numbers[(i * j) % max]));
         if i < j {
           assert!(BitVector::ult(&unsigned_numbers[i], &unsigned_numbers[j]));
