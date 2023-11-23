@@ -3,54 +3,54 @@ Arguments:
 Environment:
 0: _
 1: _
-2: BitVector { bits: [1 ], width: 32 }
-3: BitVector { bits: [1 ], width: 32 }
-4: BitVector { bits: [10 ], width: 32 }
-5: BitVector { bits: [1 ], width: 32 }
-6: BitVector { bits: [11 ], width: 32 }
-7: BitVector { bits: [101 ], width: 32 }
-8: BitVector { bits: [1000 ], width: 32 }
-9: BitVector { bits: [1101 ], width: 32 }
-10: BitVector { bits: [10101 ], width: 32 }
-11: BitVector { bits: [100010 ], width: 32 }
-12: BitVector { bits: [110111 ], width: 32 }
-13: BitVector { bits: [1011001 ], width: 32 }
-14: BitVector { bits: [10010000 ], width: 32 }
-15: BitVector { bits: [11101001 ], width: 32 }
-16: BitVector { bits: [101111001 ], width: 32 }
-17: BitVector { bits: [1001100010 ], width: 32 }
-18: BitVector { bits: [1111011011 ], width: 32 }
-19: BitVector { bits: [11000111101 ], width: 32 }
-20: BitVector { bits: [101000011000 ], width: 32 }
-21: BitVector { bits: [1000001010101 ], width: 32 }
-22: BitVector { bits: [1101001101101 ], width: 32 }
-23: BitVector { bits: [10101011000010 ], width: 32 }
-24: BitVector { bits: [100010100101111 ], width: 32 }
-25: BitVector { bits: [110111111110001 ], width: 32 }
-26: BitVector { bits: [1011010100100000 ], width: 32 }
-27: BitVector { bits: [10010010100010001 ], width: 32 }
-28: BitVector { bits: [11101101000110001 ], width: 32 }
-29: BitVector { bits: [101111111101000010 ], width: 32 }
-30: BitVector { bits: [1001101100101110011 ], width: 32 }
-31: BitVector { bits: [1111101100010110101 ], width: 32 }
-32: BitVector { bits: [11001011001000101000 ], width: 32 }
-33: BitVector { bits: [101001000101011011101 ], width: 32 }
-34: BitVector { bits: [1000010011110100000101 ], width: 32 }
-35: BitVector { bits: [1101011100011111100010 ], width: 32 }
-36: BitVector { bits: [10101110000010011100111 ], width: 32 }
-37: BitVector { bits: [100011001100110011001001 ], width: 32 }
-38: BitVector { bits: [111000111101000110110000 ], width: 32 }
-39: BitVector { bits: [1011100001001111001111001 ], width: 32 }
-40: BitVector { bits: [10010101000111000000101001 ], width: 32 }
-41: BitVector { bits: [11110001010000111010100010 ], width: 32 }
-42: BitVector { bits: [110000110010111111011001011 ], width: 32 }
-43: BitVector { bits: [1001110111101000110101101101 ], width: 32 }
-44: BitVector { bits: [1111111110000000110000111000 ], width: 32 }
-45: BitVector { bits: [11001110101101001100110100101 ], width: 32 }
-46: BitVector { bits: [101001110011101010010111011101 ], width: 32 }
-47: BitVector { bits: [1000011101001010011111110000010 ], width: 32 }
-48: BitVector { bits: [1101101011100111110010101011111 ], width: 32 }
-49: BitVector { bits: [10110001000110010010010011100001 ], width: 32 }
+2: 1
+3: 1
+4: 2
+5: 1
+6: 3
+7: 5
+8: 8
+9: 13
+10: 21
+11: 34
+12: 55
+13: 89
+14: 144
+15: 233
+16: 377
+17: 610
+18: 987
+19: 1597
+20: 2584
+21: 4181
+22: 6765
+23: 10946
+24: 17711
+25: 28657
+26: 46368
+27: 75025
+28: 121393
+29: 196418
+30: 317811
+31: 514229
+32: 832040
+33: 1346269
+34: 2178309
+35: 3524578
+36: 5702887
+37: 9227465
+38: 14930352
+39: 24157817
+40: 39088169
+41: 63245986
+42: 102334155
+43: 165580141
+44: 267914296
+45: 433494437
+46: 701408733
+47: 1134903170
+48: 1836311903
+49: 2971215073
 50: _
 51: _
 52: _
@@ -60,5 +60,5 @@ Environment:
 56: _
 
 Output:
-fibout: BitVector { bits: [10110001000110010010010011100001 ], width: 32 }
+fibout: 2971215073
 
