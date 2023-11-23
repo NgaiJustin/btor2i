@@ -64,9 +64,7 @@ impl fmt::Display for Environment {
 
     write!(f, "\nOutput:\n")?;
     self.output.iter().try_for_each(|(name, val)| {
-      if let Value::BitVector(bv) = val {
-        writeln!(f, "{}: {:?}", name, bv)?;
-      }
+      writeln!(f, "{}: {}", name, val)?;
       Ok(())
     })?;
 
