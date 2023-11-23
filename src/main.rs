@@ -50,7 +50,10 @@ fn main() -> InterpResult<()> {
 
   interp::interpret(prog_iterator, &mut env)?;
 
-  println!("{}", env);
+  // Print outputs
+  for (name, value) in env.get_output() {
+    println!("{}: {}", name, value);
+  }
 
   Ok(())
 }

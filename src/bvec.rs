@@ -7,8 +7,18 @@ use num_traits::{One, Zero};
 #[derive(Debug, Clone)]
 pub struct BitVector {
   //   bits: BVec,
-  bits: BitVec<u8, Msb0>,
+  bits: BitVec<usize, Lsb0>,
   width: usize,
+}
+
+impl From<usize> for BitVector {
+  fn from(i: usize) -> Self {
+    let bitvec = BitVec::from_element(i);
+    BitVector {
+      width: bitvec.len(),
+      bits: bitvec,
+    }
+  }
 }
 
 impl BitVector {
@@ -165,6 +175,16 @@ impl BitVector {
       }
     }
     true
+  }
+
+  pub fn to_usize(&self) -> usize {
+    let mut ans: usize = 0;
+    for i in 0..self.bits.len() {
+      if self.bits[i] {
+        ans += 1 << i;
+      }
+    }
+    ans
   }
 
   // a more intelligent implementation of this would be
