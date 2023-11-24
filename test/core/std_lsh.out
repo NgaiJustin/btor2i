@@ -1,0 +1,17 @@
+Arguments:
+left: 12345
+right: 54321
+
+Environment:
+0: _
+1: _
+2: 12345
+3: 54321
+4: _
+5: _
+6: _
+7: _
+
+Output:
+out: _
+
