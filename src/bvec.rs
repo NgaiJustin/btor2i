@@ -11,15 +11,21 @@ pub struct BitVector {
 }
 
 impl BitVector {
+  /// the value 0, of width `len`
   pub fn zeros(len: usize) -> Self {
     let mut bits = BitVec::new();
     for _ in 0..len {
       bits.push(false);
     }
-    let ans: BitVector = BitVector { bits };
-    ans
+    BitVector { bits }
   }
 
+  /// the value 1, of width `len`
+  pub fn one(len: usize) -> Self {
+    BitVector::inc(&BitVector::zeros(len))
+  }
+
+  /// the value -1, of width `len`
   pub fn ones(len: usize) -> Self {
     let mut bits = BitVec::new();
     for _ in 0..len {
@@ -28,6 +34,7 @@ impl BitVector {
     BitVector { bits }
   }
 
+  /// sign-extend `bv` by `w` bits
   pub fn sign_extend(bv: &BitVector, w: usize) -> Self {
     let mut other_vec = BitVec::new();
     for bit in bv.bits.iter() {
@@ -39,6 +46,7 @@ impl BitVector {
     BitVector { bits: other_vec }
   }
 
+  /// zero-extend `bv` by `w`
   pub fn zero_extend(bv: &BitVector, w: usize) -> Self {
     let mut other_vec = BitVec::new();
     for bit in bv.bits.iter() {
@@ -50,6 +58,7 @@ impl BitVector {
     BitVector { bits: other_vec }
   }
 
+  /// keep bits `l` thru `u` (inclusive, 1-indexed) of `bv`
   pub fn slice(bv: &BitVector, l: usize, u: usize) -> Self {
     let mut other_vec = BitVec::new();
     for i in (l - 1)..u {
@@ -59,6 +68,7 @@ impl BitVector {
     BitVector { bits: other_vec }
   }
 
+  /// bitwise not
   pub fn not(bv: &BitVector) -> Self {
     let bits = bv.bits.clone();
     BitVector { bits: !bits }
@@ -98,6 +108,7 @@ impl BitVector {
     }
   }
 
+  /// two's complement negation
   pub fn neg(bv: &BitVector) -> Self {
     BitVector::inc(&BitVector::not(bv))
   }
@@ -139,7 +150,7 @@ impl BitVector {
   }
 
   // a more intelligent implementation of this would be
-  //to construct the vector of bytes and pass that to from_[signed]_bytes
+  // to construct the vector of bytes and pass that to from_[signed]_bytes
   fn to_bigint(&self) -> BigInt {
     if self.bits.is_empty() {
       Zero::zero()
@@ -149,6 +160,7 @@ impl BitVector {
         let inc = BitVector::inc(self);
         return inc.to_bigint().checked_sub(&One::one()).unwrap();
       } else {
+        // negations are fast because big int is sign-magnitude
         let neg = BitVector::neg(self);
         return neg.to_bigint().neg();
       }
@@ -219,7 +231,6 @@ impl BitVector {
     bv1.to_biguint() <= bv2.to_biguint()
   }
 
-  /// these are also kinda inefficient
   pub fn and(bv1: &BitVector, bv2: &BitVector) -> Self {
     let mut bits = bv1.bits.clone();
     bits &= bv2.bits.as_bitslice();
