@@ -13,13 +13,6 @@ pub struct BitVector {
   bits: BitVec<usize, Lsb0>,
 }
 
-impl From<usize> for BitVector {
-  fn from(i: usize) -> Self {
-    let bitvec = BitVec::from_element(i);
-    BitVector { bits: bitvec }
-  }
-}
-
 impl BitVector {
   /// the value 0, of width `len`
   pub fn zeros(len: usize) -> Self {
@@ -159,18 +152,6 @@ impl BitVector {
 
   pub fn neq(bv1: &BitVector, bv2: &BitVector) -> bool {
     !BitVector::equals(bv1, bv2)
-  }
-
-  pub fn neq(bv1: &BitVector, bv2: &BitVector) -> bool {
-    if bv1.bits.count_ones() != bv2.bits.count_ones() {
-      return true;
-    }
-    for i in bv1.bits.iter_ones() {
-      if !(bv2.bits[i]) {
-        return false;
-      }
-    }
-    true
   }
 
   pub fn to_usize(&self) -> usize {
