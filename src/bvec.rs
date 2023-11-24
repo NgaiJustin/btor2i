@@ -74,6 +74,7 @@ impl BitVector {
     BitVector { bits: !bits }
   }
 
+  /// increment
   pub fn inc(bv: &BitVector) -> Self {
     let mut missing: usize = 0;
     while missing < bv.bits.len() && bv.bits[missing] {
@@ -91,6 +92,7 @@ impl BitVector {
     }
   }
 
+  /// decrement
   pub fn dec(bv: &BitVector) -> Self {
     let mut present: usize = 0;
     while present < bv.bits.len() && !bv.bits[present] {
