@@ -4,6 +4,7 @@ use crate::error::InterpError;
 use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
+use num_bigint::BigInt;
 use std::collections::HashMap;
 
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
@@ -78,7 +79,24 @@ pub fn interpret(
           Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!("{:?}", sort.tag()))),
         }
       }
-      btor2tools::Btor2Tag::Const => Ok(()),
+      btor2tools::Btor2Tag::Const => {
+        let constval = line.constant();
+        match line.constant() {
+          Some(cstr) => {
+            match cstr.to_str() {
+              Ok(str) => {
+                let nstring = str.to_string();
+                let boolvec: Vec<bool> = nstring.chars().map(|x| x != '0').collect();
+                Ok(())
+              }
+              Err(E) => Err(error::InterpError::BadFuncArgType("Bad value in constant".to_string()))
+            }
+            
+          }
+          None => Err(error::InterpError::BadFuncArgType("No value in constant".to_string()))
+        }
+        
+      },
       btor2tools::Btor2Tag::Constd => Ok(()),
       btor2tools::Btor2Tag::Consth => Ok(()),
       btor2tools::Btor2Tag::Input => {
