@@ -7,7 +7,7 @@ use std::convert::From;
 
 #[derive(Debug, Clone)]
 pub struct BitVector {
-  bits: BitVec<usize, Msb0>,
+  bits: BitVec<usize, Lsb0>,
 }
 
 impl BitVector {
