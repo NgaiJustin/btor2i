@@ -325,18 +325,30 @@ impl From<Vec<bool>> for BitVector {
 
 impl Display for BitVector {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    let chunked_bits = self
+      .bits
+      .iter()
+      .map(|bit| if *bit { '1' } else { '0' })
+      .collect::<Vec<_>>()
+      .chunks_mut(4)
+      .rev()
+      .map(|chunk| {
+        chunk.reverse();
+        chunk.iter().collect::<String>()
+      })
+      .collect::<Vec<_>>()
+      .join(" ");
     write!(
       f,
       "BitVector(length: {}; bits: {})",
       self.bits.len(),
-      self.bits
+      chunked_bits
     )
   }
 }
 
 #[cfg(test)]
 mod tests {
-
   use super::*;
 
   fn naive_test_eq(bv1: &BitVector, bv2: &BitVector) -> bool {
@@ -365,6 +377,12 @@ mod tests {
     assert!(bv.bits[3]);
     assert!(!naive_test_eq(&bv, &bv_7));
     assert!(naive_test_eq(&bv_7, &bv_7_2));
+    println!(
+      "{}",
+      BitVector::from(vec![
+        true, false, true, true, false, true, true, false, false, false, false
+      ])
+    );
   }
 
   #[test]
@@ -376,30 +394,30 @@ mod tests {
 
     assert!(naive_test_eq(
       &BitVector::sign_extend(&bv_3, 2),
-      &bv_3_longer
+      &bv_3_longer,
     ));
     assert!(naive_test_eq(
       &BitVector::zero_extend(&bv_3, 2),
-      &bv_3_longer
+      &bv_3_longer,
     ));
 
     assert!(naive_test_eq(
       &BitVector::sign_extend(&bv_5, 2),
-      &BitVector::from(vec![true, false, true, true, true])
+      &BitVector::from(vec![true, false, true, true, true]),
     ));
     assert!(naive_test_eq(
       &BitVector::zero_extend(&bv_5, 3),
-      &BitVector::from(vec![true, false, true, false, false, false])
+      &BitVector::from(vec![true, false, true, false, false, false]),
     ));
 
     assert!(naive_test_eq(
       &BitVector::slice(&bv_5, 1, 1),
-      &BitVector::from(vec![true])
+      &BitVector::from(vec![true]),
     ));
     assert!(naive_test_eq(&BitVector::slice(&bv_5, 1, 3), &bv_5));
     assert!(naive_test_eq(
       &BitVector::slice(&bv_3_longer, 2, 5),
-      &BitVector::from(vec![true, false, false, false])
+      &BitVector::from(vec![true, false, false, false]),
     ));
   }
 
@@ -446,15 +464,15 @@ mod tests {
 
     assert!(naive_test_eq(
       &BitVector::neg(&BitVector::neg(&BitVector::neg(&BitVector::neg(&bv_3)))),
-      &bv_3
+      &bv_3,
     ));
     assert!(naive_test_eq(
       &BitVector::not(&BitVector::not(&BitVector::not(&BitVector::not(&bv_2)))),
-      &bv_2
+      &bv_2,
     ));
     assert!(naive_test_eq(
       &BitVector::inc(&BitVector::dec(&BitVector::dec(&BitVector::inc(&bv_2)))),
-      &bv_2
+      &bv_2,
     ));
   }
 
