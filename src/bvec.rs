@@ -1,9 +1,12 @@
-use std::ops::{Add, Mul, Neg};
+use std::{
+  convert::From,
+  fmt::Display,
+  ops::{Add, Mul, Neg},
+};
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
 use num_traits::{One, Zero};
-use std::convert::From;
 
 #[derive(Debug, Clone)]
 pub struct BitVector {
@@ -317,6 +320,17 @@ impl From<Vec<bool>> for BitVector {
       ans.bits.push(*bit);
     }
     ans
+  }
+}
+
+impl Display for BitVector {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(
+      f,
+      "BitVector(length: {}; bits: {})",
+      self.bits.len(),
+      self.bits
+    )
   }
 }
 
