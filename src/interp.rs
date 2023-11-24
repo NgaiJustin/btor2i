@@ -140,7 +140,7 @@ pub fn interpret(
                 } else {
                   // convert input to bitvector
                   let input_val = _env.args.get(&input_name).unwrap();
-                  let input_bits = BitVector::from_bits(vec![*input_val == 1]);
+                  let input_bits = BitVector::from(vec![*input_val == 1]);
                   _env.set(id.try_into().unwrap(), Value::BitVector(input_bits));
                 }
               } else {
