@@ -21,6 +21,8 @@ fn main() -> InterpResult<()> {
     Some(input_file_path) => Path::new(input_file_path.as_str()).to_path_buf(),
   };
 
+  print!("{:?}", btor2_file.file_name());
+
   // get number of lines in btor2_file
   let line_nums = read_to_string(&btor2_file).unwrap().lines().count();
 
@@ -36,7 +38,7 @@ fn main() -> InterpResult<()> {
     .collect::<Vec<_>>();
 
   // Init environment
-  let mut env = interp::Environment::new(line_nums);
+  let mut env = interp::Environment::new(line_nums+1);
 
   // Parse inputs
   env = match interp::parse_inputs(env, &arg_names, &args.inputs) {

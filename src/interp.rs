@@ -5,7 +5,9 @@ use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
 use num_bigint::BigInt;
+use num_traits::Num;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
 #[derive(Debug)]
@@ -65,7 +67,8 @@ pub fn interpret(
   for line in prog_iterator {
     let id = line.id();
     let tag = line.tag();
-    let line_res = match tag {
+    println!("{:?}", _env);
+    let line_res: Result<(), String> = match tag {
       // core
       btor2tools::Btor2Tag::Sort => {
         let sort = line.sort();
@@ -86,8 +89,17 @@ pub fn interpret(
             match cstr.to_str() {
               Ok(str) => {
                 let nstring = str.to_string();
-                let boolvec: Vec<bool> = nstring.chars().map(|x| x != '0').collect();
-                Ok(())
+                let boolvec: Vec<bool> = nstring.chars().rev().map(|x| x != '0').collect();
+                match line.sort().tag() {
+                  Btor2SortTag::Bitvec => {
+                    if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+                      let bv = BitVector::from_bits_with_len(boolvec, width.try_into().unwrap());
+                      _env.set(id.try_into().unwrap(), Value::BitVector(bv));
+                    }
+                    Ok(())
+                  }
+                  Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!("{:?}", line.sort().tag()))),
+                }
               }
               Err(E) => Err(error::InterpError::BadFuncArgType("Bad value in constant".to_string()))
             }
@@ -97,8 +109,56 @@ pub fn interpret(
         }
         
       },
-      btor2tools::Btor2Tag::Constd => Ok(()),
-      btor2tools::Btor2Tag::Consth => Ok(()),
+      btor2tools::Btor2Tag::Constd => {let constval = line.constant();
+        match line.constant() {
+          Some(cstr) => {
+            match cstr.to_str() {
+              Ok(str) => {
+                let nstring = str.to_string();
+                let intval: BigInt = BigInt::from_str(&nstring).unwrap();
+                match line.sort().tag() {
+                  Btor2SortTag::Bitvec => {
+                    if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+                      let bv = BitVector::from_bigint(intval, width.try_into().unwrap());
+                      _env.set(id.try_into().unwrap(), Value::BitVector(bv));
+                    }
+                    Ok(())
+                  }
+                  Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!("{:?}", line.sort().tag()))),
+                }
+              }
+              Err(E) => Err(error::InterpError::BadFuncArgType("Bad value in constant".to_string()))
+            }
+            
+          }
+          None => Err(error::InterpError::BadFuncArgType("No value in constant".to_string()))
+        }
+      },
+      btor2tools::Btor2Tag::Consth => {
+        match line.constant() {
+          Some(cstr) => {
+            match cstr.to_str() {
+              Ok(str) => {
+                let nstring = str.to_string();
+                let intval: BigInt = BigInt::from_str_radix(&nstring, 16).unwrap();
+                match line.sort().tag() {
+                  Btor2SortTag::Bitvec => {
+                    if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+                      let bv = BitVector::from_bigint(intval, width.try_into().unwrap());
+                      _env.set(id.try_into().unwrap(), Value::BitVector(bv));
+                    }
+                    Ok(())
+                  }
+                  Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!("{:?}", line.sort().tag()))),
+                }
+              }
+              Err(E) => Err(error::InterpError::BadFuncArgType("Bad value in constant".to_string()))
+            }
+            
+          }
+          None => Err(error::InterpError::BadFuncArgType("No value in constant".to_string()))
+        }
+      },
       btor2tools::Btor2Tag::Input => {
         let input_name = line.symbol().unwrap().to_string_lossy().into_owned();
 
@@ -141,7 +201,7 @@ pub fn interpret(
 
         Ok(())
       }
-      // btor2tools::Btor2Tag::Sort => Ok(()),
+
       btor2tools::Btor2Tag::One => Ok(()),
       btor2tools::Btor2Tag::Ones => Ok(()),
       btor2tools::Btor2Tag::Zero => Ok(()),

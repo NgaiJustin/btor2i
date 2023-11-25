@@ -4,6 +4,8 @@ use bitvector::BitVector as BVec;
 use num_bigint::{BigInt, BigUint};
 use num_traits::{CheckedSub, One, Zero};
 
+use std::cmp::min;
+
 #[derive(Debug, Clone)]
 pub struct BitVector {
   bits: BVec,
@@ -32,6 +34,19 @@ impl BitVector {
       width: bits.len(),
     };
     for i in 0..ans.width {
+      if bits[i] {
+        ans.bits.insert(i);
+      }
+    }
+    ans
+  }
+
+  pub fn from_bits_with_len(bits: Vec<bool>, w: usize) -> Self {
+    let mut ans: BitVector = BitVector {
+      bits: BVec::new(w),
+      width: w,
+    };
+    for i in 0..min(w, bits.len()) {
       if bits[i] {
         ans.bits.insert(i);
       }
@@ -202,7 +217,7 @@ impl BitVector {
     ans
   }
 
-  fn from_bigint(b: BigInt, width: usize) -> Self {
+  pub fn from_bigint(b: BigInt, width: usize) -> Self {
     let mut bits = BVec::new(width);
     for i in 0..width {
       if b.bit(i.try_into().unwrap()) {
