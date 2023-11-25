@@ -54,6 +54,14 @@ impl BitVector {
     ans
   }
 
+  pub fn from_bool(b: bool) -> Self {
+    let mut ans: BitVector = BitVector { bits: BVec::new(1), width: 1 };
+    if b {
+      ans.bits.insert(0);
+    }
+    ans
+  }
+
   pub fn sign_extend(bv: &BitVector, w: usize) -> Self {
     let mut other_vec: bitvector::BitVector = BVec::new(bv.width + w);
     other_vec.insert_all(&bv.bits);
@@ -184,6 +192,10 @@ impl BitVector {
       }
     }
     true
+  }
+
+  pub fn width(&self) -> usize {
+    return self.width;
   }
 
   // a more intelligent implementation of this would be
