@@ -21,3 +21,6 @@ Cargo.lock
 
 # IntelliJ files
 .idea/
+
+# Build directory
+build/
