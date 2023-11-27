@@ -37,6 +37,16 @@ impl BitVector {
     BitVector { bits }
   }
 
+  pub fn from_bool(b: bool) -> Self {
+    let mut bits: BitVec = BitVec::new();
+    bits.push(b);
+    BitVector { bits }
+  }
+
+  pub fn width(&self) -> usize{
+    self.bits.len()
+  }
+
   /// sign-extend `bv` by `w` bits
   pub fn sign_extend(bv: &BitVector, w: usize) -> Self {
     let mut other_vec = BitVec::new();
@@ -196,7 +206,7 @@ impl BitVector {
     ans
   }
 
-  fn from_bigint(b: BigInt, width: usize) -> Self {
+  pub fn from_bigint(b: BigInt, width: usize) -> Self {
     let mut bits = BitVec::new();
     for i in 0..width {
       bits.push(b.bit(i.try_into().unwrap()));
