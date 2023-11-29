@@ -6,7 +6,7 @@ use std::{
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
-use num_traits::{One, Zero};
+use num_traits::{CheckedDiv, CheckedEuclid, One, Zero};
 
 #[derive(Debug, Clone)]
 pub struct BitVector {
@@ -328,19 +328,33 @@ impl BitVector {
 
   pub fn sll(bv1: &BitVector, bv2: &BitVector) -> Self {
     let len = bv1.bits.len();
-    let shift_amount = bv1.to_usize();
+    let shift_amount = bv2.to_usize();
     let mut bits = bitvec![0; len];
     for i in shift_amount..len {
       bits.set(i, bv1.bits[i - shift_amount]);
     }
+    BitVector { bits }
   }
 
-  pub fn sra(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  pub fn sra(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let shift_amount = bv2.to_usize();
+    let b = *bv1.bits.last().unwrap();
+    let mut bits = BitVec::repeat(b, len);
+    for i in 0..(len - shift_amount) {
+      bits.set(i, bv1.bits[i + shift_amount]);
+    }
+    BitVector { bits }
   }
 
-  pub fn srl(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  pub fn srl(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let shift_amount = bv2.to_usize();
+    let mut bits = BitVec::repeat(false, len);
+    for i in 0..(len - shift_amount) {
+      bits.set(i, bv1.bits[i + shift_amount]);
+    }
+    BitVector { bits }
   }
 
   pub fn add(bv1: &BitVector, bv2: &BitVector) -> Self {
