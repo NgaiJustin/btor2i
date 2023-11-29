@@ -107,7 +107,8 @@ pub fn interpret(
   for line in prog_iterator {
     let id = line.id();
     let tag = line.tag();
-    println!("{:?}", _env);
+    // println!("{:?}", _env);
+    println!("{:?}", line);
     let line_res: Result<(), String> = match tag {
       // core
       btor2tools::Btor2Tag::Sort => {

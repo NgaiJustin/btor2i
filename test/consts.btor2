@@ -1,0 +1,14 @@
+1 sort bitvec 4
+2 sort bitvec 1
+3 const 1 1100
+4 constd 1 -1
+5 consth 1 A
+6 const 1 1100
+7 eq 2 3 6
+8 eq 2 3 4
+9 neq 2 3 6
+10 neq 2 3 5
+11 one 1
+12 ones 1
+13 zero 1
+14 slice 2 3 4 4
