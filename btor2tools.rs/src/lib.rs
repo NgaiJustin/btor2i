@@ -215,7 +215,7 @@ impl<'parser> Btor2Line<'parser> {
 
     // non zero ids
     pub fn args(&self) -> &[i64] {
-        unsafe { slice::from_raw_parts((*self.internal).args, (*self.internal).nargs as usize) }
+        unsafe { slice::from_raw_parts((*self.internal).args, (*self.internal).margs as usize) }
     }
 }
 
