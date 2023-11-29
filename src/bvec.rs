@@ -16,25 +16,23 @@ pub struct BitVector {
 impl BitVector {
   /// the value 0, of width `len`
   pub fn zeros(len: usize) -> Self {
-    let mut bits = BitVec::new();
-    for _ in 0..len {
-      bits.push(false);
+    BitVector {
+      bits: BitVec::repeat(false, len),
     }
-    BitVector { bits }
   }
 
   /// the value 1, of width `len`
   pub fn one(len: usize) -> Self {
-    BitVector::inc(&BitVector::zeros(len))
+    let mut bits = BitVec::repeat(false, len);
+    bits.set(0, true);
+    BitVector { bits }
   }
 
   /// the value -1, of width `len`
   pub fn ones(len: usize) -> Self {
-    let mut bits = BitVec::new();
-    for _ in 0..len {
-      bits.push(true);
+    BitVector {
+      bits: BitVec::repeat(true, len),
     }
-    BitVector { bits }
   }
 
   /// sign-extend `bv` by `w` bits
@@ -95,6 +93,20 @@ impl BitVector {
     }
   }
 
+  pub fn inc2(bv: &BitVector) -> Self {
+    match bv.bits.first_zero() {
+      Some(missing) => {
+        let mut ans = bv.clone();
+        ans.bits.set(missing, true);
+        for i in 0..missing {
+          ans.bits.set(i, false);
+        }
+        ans
+      }
+      None => BitVector::zeros(bv.bits.len()),
+    }
+  }
+
   /// decrement
   pub fn dec(bv: &BitVector) -> Self {
     let mut present: usize = 0;
@@ -110,6 +122,20 @@ impl BitVector {
         ans.bits.set(i, true);
       }
       ans
+    }
+  }
+
+  pub fn dec2(bv: &BitVector) -> Self {
+    match bv.bits.first_one() {
+      Some(present) => {
+        let mut ans = bv.clone();
+        ans.bits.set(present, false);
+        for i in 0..present {
+          ans.bits.set(i, true);
+        }
+        ans
+      }
+      None => BitVector::ones(bv.bits.len()),
     }
   }
 
@@ -164,7 +190,7 @@ impl BitVector {
     ans
   }
 
-  // a more intelligent implementation of this would be
+  // perhaps a better implementation of this would be
   // to construct the vector of bytes and pass that to from_[signed]_bytes
   fn to_bigint(&self) -> BigInt {
     if self.bits.is_empty() {
@@ -278,16 +304,35 @@ impl BitVector {
     BitVector { bits }
   }
 
-  pub fn rol(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  /// rotate index 1 towards index 0
+  pub fn rol(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let rotate_amount = bv2.to_usize();
+    let mut bits = bitvec![0; len];
+    for i in 0..len {
+      bits.set(i, bv1.bits[(i + rotate_amount) % len]);
+    }
+    BitVector { bits }
   }
 
-  pub fn ror(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  /// rotate index 1 away from index 0
+  pub fn ror(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let rotate_amount = bv2.to_usize();
+    let mut bits = bitvec![0; len];
+    for i in 0..len {
+      bits.set((i + rotate_amount) % len, bv1.bits[i]);
+    }
+    BitVector { bits }
   }
 
-  pub fn sll(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  pub fn sll(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let shift_amount = bv1.to_usize();
+    let mut bits = bitvec![0; len];
+    for i in shift_amount..len {
+      bits.set(i, bv1.bits[i - shift_amount]);
+    }
   }
 
   pub fn sra(_bv1: &BitVector, _bv2: &BitVector) -> Self {
