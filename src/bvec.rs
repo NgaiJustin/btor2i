@@ -6,7 +6,7 @@ use std::{
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
-use num_traits::{CheckedDiv, CheckedEuclid, One, Zero};
+use num_traits::{One, Zero};
 
 #[derive(Debug, Clone)]
 pub struct BitVector {
@@ -371,6 +371,18 @@ impl BitVector {
       bv1.bits.len(),
     )
   }
+
+  pub fn concat(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let mut bits = BitVec::new();
+    bits.reserve(bv1.bits.len() + bv2.bits.len());
+    for i in 0..bv1.bits.len() {
+      bits.set(i, bv1.bits[i]);
+    }
+    for i in 0..bv2.bits.len() {
+      bits.set(bv1.bits.len() + i, bv2.bits[i]);
+    }
+    BitVector { bits }
+  }
 }
 
 impl From<usize> for BitVector {
@@ -382,13 +394,11 @@ impl From<usize> for BitVector {
 
 impl From<Vec<bool>> for BitVector {
   fn from(v: Vec<bool>) -> Self {
-    let mut ans: BitVector = BitVector {
-      bits: BitVec::new(),
-    };
+    let mut bits = BitVec::new();
     for bit in v.iter() {
-      ans.bits.push(*bit);
+      bits.push(*bit);
     }
-    ans
+    BitVector { bits }
   }
 }
 
