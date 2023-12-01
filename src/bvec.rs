@@ -71,10 +71,10 @@ impl BitVector {
     BitVector { bits: other_vec }
   }
 
-  /// keep bits `l` thru `u` (inclusive, 1-indexed) of `bv`
+  /// keep bits `l` thru `u` (inclusive, 0-indexed) of `bv`
   pub fn slice(bv: &BitVector, l: usize, u: usize) -> Self {
     let mut other_vec = BitVec::new();
-    for i in (l - 1)..u {
+    for i in (l)..(u+1) {
       other_vec.push(bv.bits[i]);
     }
 
