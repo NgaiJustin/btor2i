@@ -431,12 +431,12 @@ mod tests {
     ));
 
     assert!(naive_test_eq(
-      &BitVector::slice(&bv_5, 1, 1),
+      &BitVector::slice(&bv_5, 0, 0),
       &BitVector::from(vec![true]),
     ));
-    assert!(naive_test_eq(&BitVector::slice(&bv_5, 1, 3), &bv_5));
+    assert!(naive_test_eq(&BitVector::slice(&bv_5, 0, 2), &bv_5));
     assert!(naive_test_eq(
-      &BitVector::slice(&bv_3_longer, 2, 5),
+      &BitVector::slice(&bv_3_longer, 1, 4),
       &BitVector::from(vec![true, false, false, false]),
     ));
   }
