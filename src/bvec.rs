@@ -37,6 +37,16 @@ impl BitVector {
     BitVector { bits }
   }
 
+  pub fn from_bool(b: bool) -> Self {
+    let mut bits: BitVec = BitVec::new();
+    bits.push(b);
+    BitVector { bits }
+  }
+
+  pub fn width(&self) -> usize{
+    self.bits.len()
+  }
+
   /// sign-extend `bv` by `w` bits
   pub fn sign_extend(bv: &BitVector, w: usize) -> Self {
     let mut other_vec = BitVec::new();
@@ -61,10 +71,10 @@ impl BitVector {
     BitVector { bits: other_vec }
   }
 
-  /// keep bits `l` thru `u` (inclusive, 1-indexed) of `bv`
+  /// keep bits `l` thru `u` (inclusive, 0-indexed) of `bv`
   pub fn slice(bv: &BitVector, l: usize, u: usize) -> Self {
     let mut other_vec = BitVec::new();
-    for i in (l - 1)..u {
+    for i in (l)..(u+1) {
       other_vec.push(bv.bits[i]);
     }
 
@@ -196,7 +206,7 @@ impl BitVector {
     ans
   }
 
-  fn from_bigint(b: BigInt, width: usize) -> Self {
+  pub fn from_bigint(b: BigInt, width: usize) -> Self {
     let mut bits = BitVec::new();
     for i in 0..width {
       bits.push(b.bit(i.try_into().unwrap()));
@@ -421,12 +431,12 @@ mod tests {
     ));
 
     assert!(naive_test_eq(
-      &BitVector::slice(&bv_5, 1, 1),
+      &BitVector::slice(&bv_5, 0, 0),
       &BitVector::from(vec![true]),
     ));
-    assert!(naive_test_eq(&BitVector::slice(&bv_5, 1, 3), &bv_5));
+    assert!(naive_test_eq(&BitVector::slice(&bv_5, 0, 2), &bv_5));
     assert!(naive_test_eq(
-      &BitVector::slice(&bv_3_longer, 2, 5),
+      &BitVector::slice(&bv_3_longer, 1, 4),
       &BitVector::from(vec![true, false, false, false]),
     ));
   }

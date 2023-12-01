@@ -160,8 +160,9 @@ struct Btor2Line
   int64_t init, next; /* non zero if initialized or has next    */
   char *constant;     /* non zero for const, constd, consth     */
   char *symbol;       /* optional for: var array state input    */
-  uint32_t nargs;     /* number of arguments                    */
-  int64_t *args;      /* non zero ids up to nargs               */
+  uint32_t nargs;     /* number of node arguments               */
+  uint32_t margs;     /* total number of arguments              */
+  int64_t *args;      /* non zero ids up to nargs; 0/1/2 uints  */
 };
 
 struct Btor2LineIterator

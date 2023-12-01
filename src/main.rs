@@ -33,7 +33,7 @@ fn main() -> InterpResult<()> {
     .collect::<Vec<_>>();
 
   // Init environment
-  let mut env = interp::Environment::new(line_nums);
+  let mut env = interp::Environment::new(line_nums+1);
 
   // Parse inputs
   env = match interp::parse_inputs(env, &arg_names, &args.inputs) {
