@@ -5,7 +5,7 @@ use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
 use num_bigint::BigInt;
-use num_traits::{Num, One, Zero};
+use num_traits::{Num, One};
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
@@ -107,9 +107,7 @@ pub fn interpret(
   for line in prog_iterator {
     let id = line.id();
     let tag = line.tag();
-    // println!("{:?}", _env);
-    println!("{:?}", line);
-    let line_res: Result<(), String> = match tag {
+    let _line_res: Result<(), String> = match tag {
       // core
       btor2tools::Btor2Tag::Sort => {
         let sort = line.sort();
@@ -124,7 +122,7 @@ pub fn interpret(
         }
       }
       btor2tools::Btor2Tag::Const => {
-        let constval = line.constant();
+        let _constval = line.constant();
         match line.constant() {
           Some(cstr) => match cstr.to_str() {
             Ok(str) => {
@@ -144,7 +142,7 @@ pub fn interpret(
                 ))),
               }
             }
-            Err(E) => Err(error::InterpError::BadFuncArgType(
+            Err(_e) => Err(error::InterpError::BadFuncArgType(
               "Bad value in constant".to_string(),
             )),
           },
@@ -154,7 +152,7 @@ pub fn interpret(
         }
       }
       btor2tools::Btor2Tag::Constd => {
-        let constval = line.constant();
+        let _constval = line.constant();
         match line.constant() {
           Some(cstr) => match cstr.to_str() {
             Ok(str) => {
@@ -174,7 +172,7 @@ pub fn interpret(
                 ))),
               }
             }
-            Err(E) => Err(error::InterpError::BadFuncArgType(
+            Err(_e) => Err(error::InterpError::BadFuncArgType(
               "Bad value in constant".to_string(),
             )),
           },
@@ -202,7 +200,7 @@ pub fn interpret(
               ))),
             }
           }
-          Err(E) => Err(error::InterpError::BadFuncArgType(
+          Err(_e) => Err(error::InterpError::BadFuncArgType(
             "Bad value in constant".to_string(),
           )),
         },
@@ -262,7 +260,7 @@ pub fn interpret(
       }
 
       btor2tools::Btor2Tag::One => {
-        let intval: BigInt = One::one();
+        let _intval: BigInt = One::one();
         match line.sort().tag() {
           Btor2SortTag::Bitvec => {
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
@@ -427,7 +425,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let Value::BitVector(arg1) = arg1 {
-                if ((width as usize) != arg1.width()) {
+                if (width as usize) != arg1.width() {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     width.try_into().unwrap(),
@@ -464,7 +462,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let Value::BitVector(arg1) = arg1 {
-                if ((width as usize) != arg1.width()) {
+                if (width as usize) != arg1.width() {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     width.try_into().unwrap(),
@@ -501,7 +499,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let Value::BitVector(arg1) = arg1 {
-                if ((width as usize) != arg1.width()) {
+                if (width as usize) != arg1.width() {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     width.try_into().unwrap(),
@@ -538,7 +536,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let Value::BitVector(arg1) = arg1 {
-                if ((width as usize) != arg1.width()) {
+                if (width as usize) != arg1.width() {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     width.try_into().unwrap(),
@@ -575,7 +573,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let Value::BitVector(arg1) = arg1 {
-                if ((width as usize) != 1) {
+                if (width as usize) != 1 {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     1,
@@ -612,7 +610,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let Value::BitVector(arg1) = arg1 {
-                if ((width as usize) != 1) {
+                if (width as usize) != 1 {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     1,
@@ -649,7 +647,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let Value::BitVector(arg1) = arg1 {
-                if ((width as usize) != 1) {
+                if (width as usize) != 1 {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     1,
@@ -689,7 +687,7 @@ pub fn interpret(
             let arg2 = _env.get(line.args()[1] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                if ((width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1) {
+                if (width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1 {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     1,
@@ -727,7 +725,7 @@ pub fn interpret(
             let arg2 = _env.get(line.args()[1] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
               if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                if ((width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1) {
+                if (width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1 {
                   return Err(error::InterpError::BadFuncArgWidth(
                     "arg1".to_string(),
                     1,
@@ -766,7 +764,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             let arg2 = _env.get(line.args()[1] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-              if (width != 1) {
+              if width != 1 {
                 return Err(error::InterpError::BadFuncArgWidth(
                   "sid".to_string(),
                   1,
@@ -804,7 +802,7 @@ pub fn interpret(
             let arg1 = _env.get(line.args()[0] as usize);
             let arg2 = _env.get(line.args()[1] as usize);
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-              if (width != 1) {
+              if width != 1 {
                 return Err(error::InterpError::BadFuncArgWidth(
                   "sid".to_string(),
                   1,
