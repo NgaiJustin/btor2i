@@ -43,7 +43,7 @@ impl BitVector {
     BitVector { bits }
   }
 
-  pub fn width(&self) -> usize{
+  pub fn width(&self) -> usize {
     self.bits.len()
   }
 
@@ -74,7 +74,7 @@ impl BitVector {
   /// keep bits `l` thru `u` (inclusive, 0-indexed) of `bv`
   pub fn slice(bv: &BitVector, l: usize, u: usize) -> Self {
     let mut other_vec = BitVec::new();
-    for i in (l)..(u+1) {
+    for i in (l)..(u + 1) {
       other_vec.push(bv.bits[i]);
     }
 
