@@ -5,7 +5,7 @@ use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
 use num_bigint::BigInt;
-use num_traits::{Num, One, Zero};
+use num_traits::{Num, One};
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
@@ -107,8 +107,6 @@ pub fn interpret(
   for line in prog_iterator {
     let id = line.id();
     let tag = line.tag();
-    // println!("{:?}", _env);
-    println!("{:?}", line);
     let line_res: Result<(), String> = match tag {
       // core
       btor2tools::Btor2Tag::Sort => {
