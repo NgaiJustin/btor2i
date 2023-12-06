@@ -1,12 +1,12 @@
-extract = 'Time elapsed: (\d+) us'
+extract = 'Time elapsed: (\d+) µs'
 benchmarks = 'test/**/*.btor2'
 
 [runs.baseline]
 pipeline = [
-    "target/release/btor2i -f {file_path} {args}",
+    "cargo run -r  -- -f {file_path} {args}",
 ]
 
 [runs.myopt] 
 pipeline = [
-    "target/release/btor2i -f {file_path} {args}",
+    "cargo run -r -- -f {file_path} {args}",
 ]

@@ -60,7 +60,7 @@ fn main() -> InterpResult<()> {
 
   // print to stderr the time it took to run
   let duration = start.elapsed();
-  eprintln!("Time elapsed: {} us", duration.as_micros());
+  eprintln!("Time elapsed: {} µs", duration.as_micros());
 
   Ok(())
 }
