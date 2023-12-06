@@ -1,8 +1,8 @@
 """Simple comparative benchmark runner.
 """
 
-import click
-import tomlkit
+import click  # type: ignore
+import tomlkit  # type: ignore
 import subprocess
 import re
 import csv
@@ -129,4 +129,4 @@ def brench(config_path, files, jobs):
 
 
 if __name__ == "__main__":
-    brench()
+    brench()  # type: ignore
