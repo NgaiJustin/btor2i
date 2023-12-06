@@ -6,9 +6,11 @@ use clap::Parser;
 use std::fs::read_to_string;
 use std::io;
 use std::path::Path;
+use std::time::Instant;
 use tempfile::NamedTempFile;
 
 fn main() -> InterpResult<()> {
+  let start = Instant::now();
   let args = cli::CLI::parse();
 
   let btor2_file = match args.file.clone() {
@@ -55,6 +57,10 @@ fn main() -> InterpResult<()> {
 
   // Print result of execution
   println!("{}", env);
+
+  // print to stderr the time it took to run
+  let duration = start.elapsed();
+  eprintln!("Time elapsed: {} us", duration.as_micros());
 
   Ok(())
 }
