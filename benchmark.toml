@@ -1,0 +1,12 @@
+extract = 'Time elapsed: (\d+.\d+?.s)'
+benchmarks = '../test/fib.btor2'
+
+[runs.baseline]
+pipeline = [
+    "../target/release/btor2i -f {file_path} {args}",
+]
+
+[runs.myopt] 
+pipeline = [
+    "../target/release/btor2i -f {file_path} {args}",
+]
