@@ -13,7 +13,7 @@ fn main() -> InterpResult<()> {
   let start = Instant::now();
   let args = cli::CLI::parse();
 
-  let btor2_file = match args.file.clone() {
+  let btor2_file = match args.file {
     None => {
       // If no file is provided, we assume stdin
       let mut tmp = NamedTempFile::new().unwrap();
@@ -22,9 +22,6 @@ fn main() -> InterpResult<()> {
     }
     Some(input_file_path) => Path::new(input_file_path.as_str()).to_path_buf(),
   };
-
-  // get number of lines in btor2_file
-  let line_nums = read_to_string(&btor2_file).unwrap().lines().count();
 
   // Flag inputs
   let arg_names = Btor2Parser::new()
@@ -37,12 +34,16 @@ fn main() -> InterpResult<()> {
     })
     .collect::<Vec<_>>();
 
+  // TODO: try to recycle some results instead of doing stuff from scratch
+  // get number of lines in btor2_file
+  let line_nums = read_to_string(&btor2_file).unwrap().lines().count();
+
   // Init environment
   let mut env = interp::Environment::new(line_nums + 1);
 
   // Parse inputs
-  env = match interp::parse_inputs(env, &arg_names, &args.inputs) {
-    Ok(env) => env,
+  match interp::parse_inputs(&mut env, &arg_names, &args.inputs) {
+    Ok(()) => {}
     Err(e) => {
       eprintln!("{}", e);
       std::process::exit(1);
@@ -50,6 +51,7 @@ fn main() -> InterpResult<()> {
   };
 
   // Main interpreter loop
+  // TODO: recycle here as well
   let mut parser = Btor2Parser::new();
   let prog_iterator = parser.read_lines(&btor2_file).unwrap();
 

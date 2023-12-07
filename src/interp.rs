@@ -17,6 +17,7 @@ pub struct Environment {
   // Maps sid/nid to value
   // TODO: valid programs should not have the same identifier in both sets, but we don't currently check that
   // TODO: perhaps could opportunistically free mappings if we know they won't be used again
+  // TODO: consider indirect mapping of output string -> id in env
   env: Vec<Value>,
   args: HashMap<String, usize>,
   output: HashMap<String, Value>,
@@ -99,7 +100,6 @@ pub fn interpret(
   prog_iterator: Btor2LineIterator,
   _env: &mut Environment,
 ) -> Result<(), InterpError> {
-  // HashMap<String, usize>
   // for now, we only deal with bitvec sorts
   // map will be from line number to size of sort
   let mut sorts_map = HashMap::<i64, u32>::new();
@@ -108,6 +108,7 @@ pub fn interpret(
     println!("{:?}", _env);
     let id = line.id();
     let tag = line.tag();
+    // TODO: throw this error if it surfaces
     let _line_res: Result<(), String> = match tag {
       // core
       btor2tools::Btor2Tag::Sort => {
@@ -210,6 +211,7 @@ pub fn interpret(
         )),
       },
       btor2tools::Btor2Tag::Input => {
+        // TODO: map values to strings instead of usize
         match line.symbol() {
           Some(symbol_cstr) => {
             let input_name = symbol_cstr.to_string_lossy().into_owned();
@@ -1788,12 +1790,12 @@ pub fn interpret(
 
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
 pub fn parse_inputs(
-  mut env: Environment,
+  env: &mut Environment,
   arg_names: &[String],
   inputs: &[String],
-) -> Result<Environment, InterpError> {
+) -> Result<(), InterpError> {
   if arg_names.is_empty() && inputs.is_empty() {
-    Ok(env)
+    Ok(())
   } else if inputs.len() != arg_names.len() {
     Err(InterpError::BadNumFuncArgs(arg_names.len(), inputs.len()))
   } else {
@@ -1811,8 +1813,7 @@ pub fn parse_inputs(
       env.args.insert(arg_name.to_string(), arg_as_num);
 
       Ok(())
-    })?;
-    Ok(env)
+    })
   }
 }
 
