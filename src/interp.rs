@@ -1,7 +1,8 @@
 use crate::bvec::BitVector;
 use crate::error;
 use crate::error::InterpError;
-use btor2tools::Btor2LineIterator;
+// use btor2tools::Btor2LineIterator;
+use btor2tools::Btor2Line;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
 use num_bigint::BigInt;
@@ -9,6 +10,7 @@ use num_traits::{Num, One};
 use std::collections::HashMap;
 use std::convert::From;
 use std::fmt;
+use std::slice::Iter;
 use std::str::FromStr;
 use std::vec;
 
@@ -98,7 +100,7 @@ impl fmt::Display for Value {
 }
 
 pub fn interpret(
-  prog_iterator: Btor2LineIterator,
+  prog_iterator: Iter<Btor2Line>,
   _env: &mut Environment,
 ) -> Result<(), InterpError> {
   // for now, we only deal with bitvec sorts

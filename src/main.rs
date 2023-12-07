@@ -3,7 +3,6 @@ use btor2i::error::InterpResult;
 use btor2i::interp;
 use btor2tools::Btor2Parser;
 use clap::Parser;
-use std::fs::read_to_string;
 use std::io;
 use std::path::Path;
 use std::time::Instant;
@@ -23,10 +22,13 @@ fn main() -> InterpResult<()> {
     Some(input_file_path) => Path::new(input_file_path.as_str()).to_path_buf(),
   };
 
+  // Parse and store the btor2 file as Vec<Btor2Line>
+  let mut parser = Btor2Parser::new();
+  let btor2_lines = parser.read_lines(&btor2_file).unwrap().collect::<Vec<_>>();
+
   // Flag inputs
-  let arg_names = Btor2Parser::new()
-    .read_lines(&btor2_file)
-    .unwrap()
+  let arg_names = btor2_lines
+    .iter()
     .filter(|line| matches!(line.tag(), btor2tools::Btor2Tag::Input))
     .filter_map(|line| match line.symbol() {
       Some(symbol_cstr) => Some(symbol_cstr.to_string_lossy().into_owned()),
@@ -34,12 +36,8 @@ fn main() -> InterpResult<()> {
     })
     .collect::<Vec<_>>();
 
-  // TODO: try to recycle some results instead of doing stuff from scratch
-  // get number of lines in btor2_file
-  let line_nums = read_to_string(&btor2_file).unwrap().lines().count();
-
   // Init environment
-  let mut env = interp::Environment::new(line_nums + 1);
+  let mut env = interp::Environment::new(btor2_lines.len() + 1);
 
   // Parse inputs
   match interp::parse_inputs(&mut env, &arg_names, &args.inputs) {
@@ -51,11 +49,7 @@ fn main() -> InterpResult<()> {
   };
 
   // Main interpreter loop
-  // TODO: recycle here as well
-  let mut parser = Btor2Parser::new();
-  let prog_iterator = parser.read_lines(&btor2_file).unwrap();
-
-  interp::interpret(prog_iterator, &mut env)?;
+  interp::interpret(btor2_lines.iter(), &mut env)?;
 
   // Print result of execution
   println!("{}", env);
