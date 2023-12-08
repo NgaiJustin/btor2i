@@ -112,56 +112,10 @@ pub fn interpret(prog_iterator: Iter<Btor2Line>, env: &mut Environment) -> Resul
         btor2tools::Btor2Tag::Constd => eval_const(env, line, 10),
         btor2tools::Btor2Tag::Consth => eval_const(env, line, 16),
         btor2tools::Btor2Tag::Input => eval_input(env, line),
-        btor2tools::Btor2Tag::Output => {
-          let output_name = line.symbol().unwrap().to_string_lossy().into_owned();
-          let output_val = env.get(line.args()[0] as usize);
-
-          env.output.insert(output_name, output_val.clone());
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::One => {
-          let _intval: BigInt = One::one();
-          match line.sort().tag() {
-            Btor2SortTag::Bitvec => {
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                let bv = BitVector::one(width.try_into().unwrap());
-                env.set(id.try_into().unwrap(), Value::BitVector(bv));
-              }
-              Ok(())
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Ones => match line.sort().tag() {
-          Btor2SortTag::Bitvec => {
-            if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-              let bv = BitVector::ones(width.try_into().unwrap());
-              env.set(id.try_into().unwrap(), Value::BitVector(bv));
-            }
-            Ok(())
-          }
-          Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-            "{:?}",
-            line.sort().tag()
-          ))),
-        },
-        btor2tools::Btor2Tag::Zero => match line.sort().tag() {
-          Btor2SortTag::Bitvec => {
-            if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-              let bv = BitVector::zeros(width.try_into().unwrap());
-              env.set(id.try_into().unwrap(), Value::BitVector(bv));
-            }
-            Ok(())
-          }
-          Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-            "{:?}",
-            line.sort().tag()
-          ))),
-        },
+        btor2tools::Btor2Tag::Output => eval_output(env, line),
+        btor2tools::Btor2Tag::One => eval_literal(env, line, BitVector::one),
+        btor2tools::Btor2Tag::Ones => eval_literal(env, line, BitVector::ones),
+        btor2tools::Btor2Tag::Zero => eval_literal(env, line, BitVector::zeros),
 
         // indexed
         btor2tools::Btor2Tag::Sext => {
@@ -1698,6 +1652,39 @@ fn eval_input(
     }
     // unnamed input default to undef
     None => Ok(()),
+  }
+}
+
+/// Handles the `output` statements.
+fn eval_output(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+) -> Result<(), error::InterpError> {
+  let output_name = line.symbol().unwrap().to_string_lossy().into_owned();
+  let output_val = env.get(line.args()[0] as usize);
+
+  env.output.insert(output_name, output_val.clone());
+
+  Ok(())
+}
+
+fn eval_literal(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+  literal_init: fn(usize) -> BitVector,
+) -> Result<(), error::InterpError> {
+  match line.sort().tag() {
+    Btor2SortTag::Bitvec => {
+      if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+        let bv = literal_init(width.try_into().unwrap());
+        env.set(line.id().try_into().unwrap(), Value::BitVector(bv));
+      }
+      Ok(())
+    }
+    Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
+      "{:?}",
+      line.sort().tag()
+    ))),
   }
 }
 
