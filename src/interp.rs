@@ -9,6 +9,7 @@ use num_bigint::BigInt;
 use num_traits::{Num, One};
 use std::collections::HashMap;
 use std::convert::From;
+use std::f32::consts::E;
 use std::fmt;
 use std::slice::Iter;
 use std::str::FromStr;
@@ -123,264 +124,18 @@ pub fn interpret(prog_iterator: Iter<Btor2Line>, env: &mut Environment) -> Resul
         btor2tools::Btor2Tag::Slice => eval_slice_op(env, line),
 
         // unary
-        btor2tools::Btor2Tag::Not => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 1);
-              let arg1 = env.get(line.args()[0] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (width as usize) != arg1.width() {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      width.try_into().unwrap(),
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::not(arg1);
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Not of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Not of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Inc => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 1);
-              let arg1 = env.get(line.args()[0] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (width as usize) != arg1.width() {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      width.try_into().unwrap(),
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::inc(arg1);
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Inc of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Inc of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Dec => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 1);
-              let arg1 = env.get(line.args()[0] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (width as usize) != arg1.width() {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      width.try_into().unwrap(),
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::dec(arg1);
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Dec of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Dec of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Neg => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 1);
-              let arg1 = env.get(line.args()[0] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (width as usize) != arg1.width() {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      width.try_into().unwrap(),
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::neg(arg1);
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Neg of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Neg of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
+        btor2tools::Btor2Tag::Not => eval_unary_op(env, line, BitVector::not),
+        btor2tools::Btor2Tag::Inc => eval_unary_op(env, line, BitVector::inc),
+        btor2tools::Btor2Tag::Dec => eval_unary_op(env, line, BitVector::dec),
+        btor2tools::Btor2Tag::Neg => eval_unary_op(env, line, BitVector::neg),
         btor2tools::Btor2Tag::Redand => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 1);
-              let arg1 = env.get(line.args()[0] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::redand(arg1));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Redand of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Redand of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
+          eval_unary_op(env, line, |bv| BitVector::from_bool(BitVector::redand(bv)))
         }
         btor2tools::Btor2Tag::Redor => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 1);
-              let arg1 = env.get(line.args()[0] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::redor(arg1));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Redor of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Redor of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
+          eval_unary_op(env, line, |bv| BitVector::from_bool(BitVector::redor(bv)))
         }
         btor2tools::Btor2Tag::Redxor => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 1);
-              let arg1 = env.get(line.args()[0] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::redxor(arg1));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Redxor of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Redxor of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
+          eval_unary_op(env, line, |bv| BitVector::from_bool(BitVector::redxor(bv)))
         }
 
         // binary - boolean
@@ -1652,6 +1407,47 @@ fn eval_slice_op(
       } else {
         Err(error::InterpError::Unsupported(format!(
           "Slicing of {:?} is not supported",
+          arg1
+        )))
+      }
+    }
+    Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
+      "{:?}",
+      line.sort().tag()
+    ))),
+  }
+}
+
+fn eval_unary_op(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+  unary_fn: fn(&BitVector) -> BitVector,
+) -> Result<(), error::InterpError> {
+  let sort = line.sort();
+  match sort.tag() {
+    Btor2SortTag::Bitvec => {
+      assert_eq!(line.args().len(), 1);
+      let arg1 = env.get(line.args()[0] as usize);
+      if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+        if let Value::BitVector(arg1) = arg1 {
+          if arg1.width() != width as usize {
+            return Err(error::InterpError::Unsupported(format!(
+              "Unary operation of {:?} is not supported",
+              arg1
+            )));
+          }
+          let bv2 = unary_fn(arg1);
+          env.set(line.id().try_into().unwrap(), Value::BitVector(bv2));
+          Ok(())
+        } else {
+          Err(error::InterpError::Unsupported(format!(
+            "Unary operation of {:?} is not supported",
+            arg1
+          )))
+        }
+      } else {
+        Err(error::InterpError::Unsupported(format!(
+          "Unary operation of {:?} is not supported",
           arg1
         )))
       }
