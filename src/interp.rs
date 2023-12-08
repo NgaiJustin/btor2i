@@ -154,7 +154,7 @@ pub fn interpret(
           None => Err(error::InterpError::BadFuncArgType(
             "No value in constant".to_string(),
           )),
-        },
+        }
         btor2tools::Btor2Tag::Constd => match line.constant() {
           Some(cstr) => match cstr.to_str() {
             Ok(str) => {
@@ -181,7 +181,7 @@ pub fn interpret(
           None => Err(error::InterpError::BadFuncArgType(
             "No value in constant".to_string(),
           )),
-        },
+        }
         btor2tools::Btor2Tag::Consth => match line.constant() {
           Some(cstr) => match cstr.to_str() {
             Ok(str) => {
@@ -208,7 +208,7 @@ pub fn interpret(
           None => Err(error::InterpError::BadFuncArgType(
             "No value in constant".to_string(),
           )),
-        },
+        }
         btor2tools::Btor2Tag::Input => {
           // TODO: map values to strings instead of usize
           match line.symbol() {
@@ -288,7 +288,7 @@ pub fn interpret(
             "{:?}",
             line.sort().tag()
           ))),
-        },
+        }
         btor2tools::Btor2Tag::Zero => match line.sort().tag() {
           Btor2SortTag::Bitvec => {
             if let Btor2SortContent::Bitvec { width } = line.sort().content() {
@@ -301,7 +301,7 @@ pub fn interpret(
             "{:?}",
             line.sort().tag()
           ))),
-        },
+        }
 
         // indexed
         btor2tools::Btor2Tag::Sext => {
