@@ -5,7 +5,7 @@ use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
 use num_bigint::BigInt;
-use num_traits::Num;
+use num_traits::{Num, One};
 use std::collections::HashMap;
 use std::fmt;
 use std::str::FromStr;
