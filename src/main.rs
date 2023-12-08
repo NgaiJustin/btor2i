@@ -6,9 +6,11 @@ use clap::Parser;
 use std::fs::read_to_string;
 use std::io;
 use std::path::Path;
+use std::time::Instant;
 use tempfile::NamedTempFile;
 
 fn main() -> InterpResult<()> {
+  let start = Instant::now();
   let args = cli::CLI::parse();
 
   let btor2_file = match args.file.clone() {
@@ -29,11 +31,14 @@ fn main() -> InterpResult<()> {
     .read_lines(&btor2_file)
     .unwrap()
     .filter(|line| matches!(line.tag(), btor2tools::Btor2Tag::Input))
-    .map(|line| line.symbol().unwrap().to_string_lossy().into_owned()) // this is safe since all inputs have symbols
+    .filter_map(|line| match line.symbol() {
+      Some(symbol_cstr) => Some(symbol_cstr.to_string_lossy().into_owned()),
+      None => None, // skip unnamed inputs (default to undef)
+    })
     .collect::<Vec<_>>();
 
   // Init environment
-  let mut env = interp::Environment::new(line_nums+1);
+  let mut env = interp::Environment::new(line_nums + 1);
 
   // Parse inputs
   env = match interp::parse_inputs(env, &arg_names, &args.inputs) {
@@ -52,6 +57,10 @@ fn main() -> InterpResult<()> {
 
   // Print result of execution
   println!("{}", env);
+
+  // print to stderr the time it took to run
+  let duration = start.elapsed();
+  eprintln!("Time elapsed: {} µs", duration.as_micros());
 
   Ok(())
 }

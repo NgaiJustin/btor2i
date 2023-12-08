@@ -8,6 +8,10 @@ install:
 test:
 	turnt $(TESTS)
 
+.PHONY: benchmarks
+benchmarks:
+	python3 brench-pipeless/brench.py benchmark.toml
+
 # This is primarily used for running examples and debuging a bril program
 .PHONY: example
 example:

@@ -66,7 +66,7 @@ impl BitVector {
     BitVector { bits: other_vec }
   }
 
-  /// keep bits `l` thru `u` (inclusive, 1-indexed) of `bv`
+  /// keep bits `l` thru `u` (inclusive, 0-indexed) of `bv`
   pub fn slice(bv: &BitVector, l: usize, u: usize) -> Self {
     let mut other_vec = BitVec::new();
     for i in (l)..(u + 1) {
@@ -567,9 +567,9 @@ mod tests {
       &BitVector::slice(&bv_5, 0, 0),
       &BitVector::from(vec![true]),
     ));
-    assert!(naive_test_eq(&BitVector::slice(&bv_5, 1, 3), &bv_5));
+    assert!(naive_test_eq(&BitVector::slice(&bv_5, 0, 2), &bv_5));
     assert!(naive_test_eq(
-      &BitVector::slice(&bv_3_longer, 2, 5),
+      &BitVector::slice(&bv_3_longer, 1, 4),
       &BitVector::from(vec![true, false, false, false]),
     ));
   }

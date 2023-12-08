@@ -1,0 +1,12 @@
+extract = 'Time elapsed: (\d+) µs'
+benchmarks = 'test/**/*.btor2'
+
+[runs.baseline]
+pipeline = [
+    "cargo run -r  -- -f {file_path} {args}",
+]
+
+[runs.myopt] 
+pipeline = [
+    "cargo run -r -- -f {file_path} {args}",
+]
