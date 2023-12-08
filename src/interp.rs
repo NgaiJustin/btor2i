@@ -1756,7 +1756,24 @@ pub fn interpret(
         }
 
         // ternary - conditional
-        btor2tools::Btor2Tag::Ite => Ok(()),
+        btor2tools::Btor2Tag::Ite => {
+          assert_eq!(line.args().len(), 3);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+          let arg3 = _env.get(line.args()[2] as usize);
+          if let (Value::BitVector(arg1), Value::BitVector(arg2), Value::BitVector(arg3)) =
+            (arg1, arg2, arg3)
+          {
+            let result = BitVector::ite(arg1, arg2, arg3);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Ite of {:?}, {:?} and {:?} is not supported",
+              arg1, arg2, arg3
+            )));
+          }
+          Ok(())
+        }
 
         // Unsupported: arrays, state, assertions
         btor2tools::Btor2Tag::Bad
