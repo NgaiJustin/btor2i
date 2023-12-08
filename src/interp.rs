@@ -141,84 +141,8 @@ pub fn interpret(prog_iterator: Iter<Btor2Line>, env: &mut Environment) -> Resul
         // binary - boolean
         btor2tools::Btor2Tag::Iff => eval_binary_bool_op(env, line, BitVector::iff),
         btor2tools::Btor2Tag::Implies => eval_binary_bool_op(env, line, BitVector::implies),
-
-        // binary - (dis)equality
-        btor2tools::Btor2Tag::Eq => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if width != 1 {
-                  return Err(error::InterpError::BadFuncArgWidth(
-                    "sid".to_string(),
-                    1,
-                    width.try_into().unwrap(),
-                  ));
-                }
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  let bv2 = BitVector::from_bool(BitVector::equals(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Eq of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Eq of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Neq => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if width != 1 {
-                  return Err(error::InterpError::BadFuncArgWidth(
-                    "sid".to_string(),
-                    1,
-                    width.try_into().unwrap(),
-                  ));
-                }
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  let bv2 = BitVector::from_bool(BitVector::neq(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Neq of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Neq of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
+        btor2tools::Btor2Tag::Eq => eval_binary_bool_op(env, line, BitVector::equals),
+        btor2tools::Btor2Tag::Neq => eval_binary_bool_op(env, line, BitVector::neq),
 
         // binary - (un)signed inequality
         btor2tools::Btor2Tag::Sgt => {
@@ -1403,13 +1327,6 @@ fn eval_binary_bool_op(
       let arg2 = env.get(line.args()[1] as usize);
       if let Btor2SortContent::Bitvec { width } = line.sort().content() {
         if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-          if (width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1 {
-            return Err(error::InterpError::BadFuncArgWidth(
-              "arg1".to_string(),
-              1,
-              arg1.width(),
-            ));
-          }
           let bv2 = BitVector::from_bool(binary_bool_fn(arg1, arg2));
           env.set(line.id().try_into().unwrap(), Value::BitVector(bv2));
           Ok(())
