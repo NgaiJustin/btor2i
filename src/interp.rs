@@ -120,44 +120,7 @@ pub fn interpret(prog_iterator: Iter<Btor2Line>, env: &mut Environment) -> Resul
         // indexed
         btor2tools::Btor2Tag::Sext => eval_ext_op(env, line, BitVector::sign_extend),
         btor2tools::Btor2Tag::Uext => eval_ext_op(env, line, BitVector::zero_extend),
-        btor2tools::Btor2Tag::Slice => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 3);
-              let arg1 = env.get(line.args()[0] as usize);
-              let u = line.args()[1] as usize;
-              let l: usize = line.args()[2] as usize;
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let Value::BitVector(arg1) = arg1 {
-                  if (u - l) + 1 != width as usize {
-                    return Err(error::InterpError::Unsupported(format!(
-                      "Slicing of {:?} is not supported",
-                      arg1
-                    )));
-                  }
-                  let bv2 = BitVector::slice(arg1, l, u);
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Slicing of {:?} is not supported",
-                    arg1
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Slicing of {:?} is not supported",
-                  arg1
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
+        btor2tools::Btor2Tag::Slice => eval_slice_op(env, line),
 
         // unary
         btor2tools::Btor2Tag::Not => {
@@ -1647,6 +1610,48 @@ fn eval_ext_op(
       } else {
         Err(error::InterpError::Unsupported(format!(
           "Extension of {:?} is not supported",
+          arg1
+        )))
+      }
+    }
+    Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
+      "{:?}",
+      line.sort().tag()
+    ))),
+  }
+}
+
+fn eval_slice_op(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+) -> Result<(), error::InterpError> {
+  let sort = line.sort();
+  match sort.tag() {
+    Btor2SortTag::Bitvec => {
+      assert_eq!(line.args().len(), 3);
+      let arg1 = env.get(line.args()[0] as usize);
+      let u = line.args()[1] as usize;
+      let l = line.args()[2] as usize;
+      if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+        if let Value::BitVector(arg1) = arg1 {
+          if (u - l) + 1 != width as usize {
+            return Err(error::InterpError::Unsupported(format!(
+              "Slicing of {:?} is not supported",
+              arg1
+            )));
+          }
+          let bv2 = BitVector::slice(arg1, l, u);
+          env.set(line.id().try_into().unwrap(), Value::BitVector(bv2));
+          Ok(())
+        } else {
+          Err(error::InterpError::Unsupported(format!(
+            "Slicing of {:?} is not supported",
+            arg1
+          )))
+        }
+      } else {
+        Err(error::InterpError::Unsupported(format!(
+          "Slicing of {:?} is not supported",
           arg1
         )))
       }
