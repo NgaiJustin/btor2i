@@ -1378,11 +1378,81 @@ pub fn interpret(
           }
           Ok(())
         }
-        btor2tools::Btor2Tag::Sdiv => Ok(()),
-        btor2tools::Btor2Tag::Udiv => Ok(()),
-        btor2tools::Btor2Tag::Smod => Ok(()),
-        btor2tools::Btor2Tag::Srem => Ok(()),
-        btor2tools::Btor2Tag::Urem => Ok(()),
+        btor2tools::Btor2Tag::Sdiv => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::sdiv(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Sdiv of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Udiv => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::udiv(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Udiv of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Smod => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::smod(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Smod of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Srem => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::srem(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Srem of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Urem => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::urem(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Urem of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+          Ok(())
+        }
         btor2tools::Btor2Tag::Sub => {
           assert_eq!(line.args().len(), 2);
           let arg1 = _env.get(line.args()[0] as usize);
