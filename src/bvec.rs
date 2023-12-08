@@ -1,11 +1,8 @@
-use std::{
-  convert::From,
-  fmt::Display,
-  ops::{Add, Mul, Neg},
-};
+use std::{convert::From, fmt::Display, ops::Neg, ops::Rem};
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
+use num_integer::Integer;
 use num_traits::{One, Zero};
 
 #[derive(Debug, Clone)]
@@ -16,25 +13,23 @@ pub struct BitVector {
 impl BitVector {
   /// the value 0, of width `len`
   pub fn zeros(len: usize) -> Self {
-    let mut bits = BitVec::new();
-    for _ in 0..len {
-      bits.push(false);
+    BitVector {
+      bits: BitVec::repeat(false, len),
     }
-    BitVector { bits }
   }
 
   /// the value 1, of width `len`
   pub fn one(len: usize) -> Self {
-    BitVector::inc(&BitVector::zeros(len))
+    let mut bits = BitVec::repeat(false, len);
+    bits.set(0, true);
+    BitVector { bits }
   }
 
   /// the value -1, of width `len`
   pub fn ones(len: usize) -> Self {
-    let mut bits = BitVec::new();
-    for _ in 0..len {
-      bits.push(true);
+    BitVector {
+      bits: BitVec::repeat(true, len),
     }
-    BitVector { bits }
   }
 
   pub fn from_bool(b: bool) -> Self {
@@ -105,6 +100,20 @@ impl BitVector {
     }
   }
 
+  pub fn inc2(bv: &BitVector) -> Self {
+    match bv.bits.first_zero() {
+      Some(missing) => {
+        let mut ans = bv.clone();
+        ans.bits.set(missing, true);
+        for i in 0..missing {
+          ans.bits.set(i, false);
+        }
+        ans
+      }
+      None => BitVector::zeros(bv.bits.len()),
+    }
+  }
+
   /// decrement
   pub fn dec(bv: &BitVector) -> Self {
     let mut present: usize = 0;
@@ -120,6 +129,20 @@ impl BitVector {
         ans.bits.set(i, true);
       }
       ans
+    }
+  }
+
+  pub fn dec2(bv: &BitVector) -> Self {
+    match bv.bits.first_one() {
+      Some(present) => {
+        let mut ans = bv.clone();
+        ans.bits.set(present, false);
+        for i in 0..present {
+          ans.bits.set(i, true);
+        }
+        ans
+      }
+      None => BitVector::ones(bv.bits.len()),
     }
   }
 
@@ -174,7 +197,7 @@ impl BitVector {
     ans
   }
 
-  // a more intelligent implementation of this would be
+  // perhaps a better implementation of this would be
   // to construct the vector of bytes and pass that to from_[signed]_bytes
   fn to_bigint(&self) -> BigInt {
     if self.bits.is_empty() {
@@ -288,39 +311,151 @@ impl BitVector {
     BitVector { bits }
   }
 
-  pub fn rol(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  /// rotate index 1 towards index 0
+  pub fn rol(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let rotate_amount = bv2.to_usize();
+    let mut bits = bitvec![0; len];
+    for i in 0..len {
+      bits.set(i, bv1.bits[(i + rotate_amount) % len]);
+    }
+    BitVector { bits }
   }
 
-  pub fn ror(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  /// rotate index 1 away from index 0
+  pub fn ror(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let rotate_amount = bv2.to_usize();
+    let mut bits = bitvec![0; len];
+    for i in 0..len {
+      bits.set((i + rotate_amount) % len, bv1.bits[i]);
+    }
+    BitVector { bits }
   }
 
-  pub fn sll(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  pub fn sll(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let shift_amount = bv2.to_usize();
+    let mut bits = bitvec![0; len];
+    for i in shift_amount..len {
+      bits.set(i, bv1.bits[i - shift_amount]);
+    }
+    BitVector { bits }
   }
 
-  pub fn sra(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  pub fn sra(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let shift_amount = bv2.to_usize();
+    let b = *bv1.bits.last().unwrap();
+    let mut bits = BitVec::repeat(b, len);
+    for i in 0..(len - shift_amount) {
+      bits.set(i, bv1.bits[i + shift_amount]);
+    }
+    BitVector { bits }
   }
 
-  pub fn srl(_bv1: &BitVector, _bv2: &BitVector) -> Self {
-    todo!()
+  pub fn srl(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let len = bv1.bits.len();
+    let shift_amount = bv2.to_usize();
+    let mut bits = BitVec::repeat(false, len);
+    for i in 0..(len - shift_amount) {
+      bits.set(i, bv1.bits[i + shift_amount]);
+    }
+    BitVector { bits }
   }
 
   pub fn add(bv1: &BitVector, bv2: &BitVector) -> Self {
-    BitVector::from_biguint(bv1.to_biguint().add(bv2.to_biguint()), bv1.bits.len())
+    BitVector::from_biguint(bv1.to_biguint() + (bv2.to_biguint()), bv1.bits.len())
   }
 
   pub fn mul(bv1: &BitVector, bv2: &BitVector) -> Self {
-    BitVector::from_biguint(bv1.to_biguint().mul(bv2.to_biguint()), bv1.bits.len())
+    BitVector::from_biguint(bv1.to_biguint() * (bv2.to_biguint()), bv1.bits.len())
   }
 
   pub fn sub(bv1: &BitVector, bv2: &BitVector) -> Self {
+    BitVector::from_bigint(bv1.to_bigint() - (&bv2.to_bigint()), bv1.bits.len())
+  }
+
+  pub fn udiv(bv1: &BitVector, bv2: &BitVector) -> Self {
+    BitVector::from_biguint(bv1.to_biguint() / bv2.to_biguint(), bv1.bits.len())
+  }
+
+  pub fn urem(bv1: &BitVector, bv2: &BitVector) -> Self {
+    BitVector::from_biguint(bv1.to_biguint().rem(&bv2.to_biguint()), bv1.bits.len())
+  }
+
+  pub fn sdiv(bv1: &BitVector, bv2: &BitVector) -> Self {
     BitVector::from_bigint(
-      bv1.to_bigint().checked_sub(&bv2.to_bigint()).unwrap(),
+      bv1
+        .to_bigint()
+        .checked_div(&bv2.to_bigint())
+        .unwrap_or(BitVector::ones(bv1.bits.len()).to_bigint()),
       bv1.bits.len(),
     )
+  }
+
+  pub fn smod(bv1: &BitVector, bv2: &BitVector) -> Self {
+    BitVector::from_bigint(bv1.to_bigint().mod_floor(&bv2.to_bigint()), bv1.bits.len())
+  }
+
+  pub fn srem(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let bv1i = bv1.to_bigint();
+    let bv2i = bv2.to_bigint();
+    let ans = bv1i.mod_floor(&bv2i);
+    if bv1i.sign() != bv2i.sign() && !bv1i.is_zero() && !bv2i.is_zero() {
+      BitVector::from_bigint(ans - bv2i, bv1.bits.len())
+    } else {
+      BitVector::from_bigint(ans, bv1.bits.len())
+    }
+  }
+
+  pub fn saddo(_bv1: &BitVector, _bv2: &BitVector) -> bool {
+    todo!()
+  }
+
+  pub fn uaddo(_bv1: &BitVector, _bv2: &BitVector) -> bool {
+    todo!()
+  }
+
+  pub fn sdivo(_bv1: &BitVector, _bv2: &BitVector) -> bool {
+    todo!()
+  }
+
+  pub fn smulo(_bv1: &BitVector, _bv2: &BitVector) -> bool {
+    todo!()
+  }
+
+  pub fn umulo(_bv1: &BitVector, _bv2: &BitVector) -> bool {
+    todo!()
+  }
+
+  pub fn ssubo(_bv1: &BitVector, _bv2: &BitVector) -> bool {
+    todo!()
+  }
+
+  pub fn usubo(_bv1: &BitVector, _bv2: &BitVector) -> bool {
+    todo!()
+  }
+
+  pub fn concat(bv1: &BitVector, bv2: &BitVector) -> Self {
+    let mut bits = BitVec::new();
+    bits.reserve(bv1.bits.len() + bv2.bits.len());
+    for i in 0..bv1.bits.len() {
+      bits.set(i, bv1.bits[i]);
+    }
+    for i in 0..bv2.bits.len() {
+      bits.set(bv1.bits.len() + i, bv2.bits[i]);
+    }
+    BitVector { bits }
+  }
+
+  pub fn ite(cond: &BitVector, bv1: &BitVector, bv2: &BitVector) -> Self {
+    assert!(cond.bits.len() == 1);
+    if cond.bits[0] {
+      bv1.clone()
+    } else {
+      bv2.clone()
+    }
   }
 }
 
@@ -333,13 +468,11 @@ impl From<usize> for BitVector {
 
 impl From<Vec<bool>> for BitVector {
   fn from(v: Vec<bool>) -> Self {
-    let mut ans: BitVector = BitVector {
-      bits: BitVec::new(),
-    };
+    let mut bits = BitVec::new();
     for bit in v.iter() {
-      ans.bits.push(*bit);
+      bits.push(*bit);
     }
-    ans
+    BitVector { bits }
   }
 }
 
@@ -514,7 +647,7 @@ mod tests {
         let prod = BitVector::mul(&unsigned_numbers[i], &unsigned_numbers[j]);
 
         // implementation-specific, behavior should be undefined in second case
-        let sub_index = if i >= j { i - j } else { i + max - j };
+        let _sub_index = if i >= j { i - j } else { i + max - j };
 
         assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % max]));
         // assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % max]));
