@@ -260,7 +260,6 @@ pub fn interpret(
 
           Ok(())
         }
-
         btor2tools::Btor2Tag::One => {
           let _intval: BigInt = One::one();
           match line.sort().tag() {
@@ -912,7 +911,6 @@ pub fn interpret(
             ))),
           }
         }
-
         btor2tools::Btor2Tag::Slt => {
           let sort = line.sort();
           match sort.tag() {
@@ -989,7 +987,6 @@ pub fn interpret(
             ))),
           }
         }
-
         btor2tools::Btor2Tag::Ugt => {
           let sort = line.sort();
           match sort.tag() {
@@ -1028,7 +1025,6 @@ pub fn interpret(
             ))),
           }
         }
-
         btor2tools::Btor2Tag::Ugte => {
           let sort = line.sort();
           match sort.tag() {
@@ -1162,7 +1158,6 @@ pub fn interpret(
 
           Ok(())
         }
-
         btor2tools::Btor2Tag::Nand => {
           assert_eq!(line.args().len(), 2);
           let arg1 = _env.get(line.args()[0] as usize);
@@ -1180,7 +1175,6 @@ pub fn interpret(
 
           Ok(())
         }
-
         btor2tools::Btor2Tag::Nor => {
           assert_eq!(line.args().len(), 2);
           let arg1 = _env.get(line.args()[0] as usize);
@@ -1198,7 +1192,6 @@ pub fn interpret(
 
           Ok(())
         }
-
         btor2tools::Btor2Tag::Or => {
           assert_eq!(line.args().len(), 2);
           let arg1 = _env.get(line.args()[0] as usize);
@@ -1216,7 +1209,6 @@ pub fn interpret(
 
           Ok(())
         }
-
         btor2tools::Btor2Tag::Xnor => {
           assert_eq!(line.args().len(), 2);
           let arg1 = _env.get(line.args()[0] as usize);
@@ -1234,7 +1226,6 @@ pub fn interpret(
 
           Ok(())
         }
-
         btor2tools::Btor2Tag::Xor => {
           assert_eq!(line.args().len(), 2);
           let arg1 = _env.get(line.args()[0] as usize);
