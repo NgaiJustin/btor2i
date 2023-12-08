@@ -139,82 +139,8 @@ pub fn interpret(prog_iterator: Iter<Btor2Line>, env: &mut Environment) -> Resul
         }
 
         // binary - boolean
-        btor2tools::Btor2Tag::Iff => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::iff(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Iff of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Iff of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Implies => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::implies(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Implies of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Implies of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
+        btor2tools::Btor2Tag::Iff => eval_binary_bool_op(env, line, BitVector::iff),
+        btor2tools::Btor2Tag::Implies => eval_binary_bool_op(env, line, BitVector::implies),
 
         // binary - (dis)equality
         btor2tools::Btor2Tag::Eq => {
@@ -1314,6 +1240,7 @@ fn eval_output_op(
   Ok(())
 }
 
+/// Handle the `one`, `ones` and `zero` statements.
 fn eval_literals_op(
   env: &mut Environment,
   line: &btor2tools::Btor2Line,
@@ -1334,6 +1261,7 @@ fn eval_literals_op(
   }
 }
 
+/// Handles the `sext` and `uext` statements.
 fn eval_ext_op(
   env: &mut Environment,
   line: &btor2tools::Btor2Line,
@@ -1376,6 +1304,7 @@ fn eval_ext_op(
   }
 }
 
+/// Handles the `slice` statements.
 fn eval_slice_op(
   env: &mut Environment,
   line: &btor2tools::Btor2Line,
@@ -1418,6 +1347,7 @@ fn eval_slice_op(
   }
 }
 
+/// Handle the `not`, `inc`, `dec`, `neg`, `redand`, `redor` and `redxor` statements.
 fn eval_unary_op(
   env: &mut Environment,
   line: &btor2tools::Btor2Line,
@@ -1449,6 +1379,50 @@ fn eval_unary_op(
         Err(error::InterpError::Unsupported(format!(
           "Unary operation of {:?} is not supported",
           arg1
+        )))
+      }
+    }
+    Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
+      "{:?}",
+      line.sort().tag()
+    ))),
+  }
+}
+
+/// Handles the `iff` and `implies` statements.
+fn eval_binary_bool_op(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+  binary_bool_fn: fn(&BitVector, &BitVector) -> bool,
+) -> Result<(), error::InterpError> {
+  let sort = line.sort();
+  match sort.tag() {
+    Btor2SortTag::Bitvec => {
+      assert_eq!(line.args().len(), 2);
+      let arg1 = env.get(line.args()[0] as usize);
+      let arg2 = env.get(line.args()[1] as usize);
+      if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+        if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+          if (width as usize) != 1 || arg1.width() != 1 || arg2.width() != 1 {
+            return Err(error::InterpError::BadFuncArgWidth(
+              "arg1".to_string(),
+              1,
+              arg1.width(),
+            ));
+          }
+          let bv2 = BitVector::from_bool(binary_bool_fn(arg1, arg2));
+          env.set(line.id().try_into().unwrap(), Value::BitVector(bv2));
+          Ok(())
+        } else {
+          Err(error::InterpError::Unsupported(format!(
+            "Iff of {:?}, {:?} is not supported",
+            arg1, arg2
+          )))
+        }
+      } else {
+        Err(error::InterpError::Unsupported(format!(
+          "Iff of {:?}, {:?} is not supported",
+          arg1, arg2
         )))
       }
     }
