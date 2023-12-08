@@ -1150,12 +1150,113 @@ pub fn interpret(
         }
 
         // binary - bit-wise
-        btor2tools::Btor2Tag::And => Ok(()),
-        btor2tools::Btor2Tag::Nand => Ok(()),
-        btor2tools::Btor2Tag::Nor => Ok(()),
-        btor2tools::Btor2Tag::Or => Ok(()),
-        btor2tools::Btor2Tag::Xnor => Ok(()),
-        btor2tools::Btor2Tag::Xor => Ok(()),
+        btor2tools::Btor2Tag::And => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::and(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "And of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+
+        btor2tools::Btor2Tag::Nand => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::nand(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Nand of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+
+        btor2tools::Btor2Tag::Nor => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::nor(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Nor of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+
+        btor2tools::Btor2Tag::Or => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::or(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Or of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+
+        btor2tools::Btor2Tag::Xnor => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::xnor(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Xnor of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+
+        btor2tools::Btor2Tag::Xor => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::xor(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Xor of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
 
         // binary - rotate, shift
         btor2tools::Btor2Tag::Rol => Ok(()),
