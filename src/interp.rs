@@ -1259,11 +1259,91 @@ pub fn interpret(
         }
 
         // binary - rotate, shift
-        btor2tools::Btor2Tag::Rol => Ok(()),
-        btor2tools::Btor2Tag::Ror => Ok(()),
-        btor2tools::Btor2Tag::Sll => Ok(()),
-        btor2tools::Btor2Tag::Sra => Ok(()),
-        btor2tools::Btor2Tag::Srl => Ok(()),
+        btor2tools::Btor2Tag::Rol => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::rol(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Rol of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Ror => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::ror(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Ror of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Sll => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::sll(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Sll of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Sra => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::sra(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Sra of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
+        btor2tools::Btor2Tag::Srl => {
+          assert_eq!(line.args().len(), 2);
+          let arg1 = _env.get(line.args()[0] as usize);
+          let arg2 = _env.get(line.args()[1] as usize);
+
+          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+            let result = BitVector::srl(arg1, arg2);
+            _env.set(id.try_into().unwrap(), Value::BitVector(result));
+          } else {
+            return Err(error::InterpError::Unsupported(format!(
+              "Srl of {:?} and {:?} is not supported",
+              arg1, arg2
+            )));
+          }
+
+          Ok(())
+        }
 
         // binary - arithmetic
         btor2tools::Btor2Tag::Add => {
