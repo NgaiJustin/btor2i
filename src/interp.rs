@@ -841,7 +841,44 @@ pub fn interpret(
         }
 
         // binary - (un)signed inequality
-        btor2tools::Btor2Tag::Sgt => Ok(()),
+        btor2tools::Btor2Tag::Sgt => {
+          let sort = line.sort();
+          match sort.tag() {
+            Btor2SortTag::Bitvec => {
+              assert_eq!(line.args().len(), 2);
+              let arg1 = _env.get(line.args()[0] as usize);
+              let arg2 = _env.get(line.args()[1] as usize);
+              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+                  if (width as usize) != 1 {
+                    return Err(error::InterpError::BadFuncArgWidth(
+                      "arg1".to_string(),
+                      1,
+                      arg1.width(),
+                    ));
+                  }
+                  let bv2 = BitVector::from_bool(BitVector::sgt(arg1, arg2));
+                  _env.set(id.try_into().unwrap(), Value::BitVector(bv2));
+                  Ok(())
+                } else {
+                  Err(error::InterpError::Unsupported(format!(
+                    "Sgt of {:?}, {:?} is not supported",
+                    arg1, arg2
+                  )))
+                }
+              } else {
+                Err(error::InterpError::Unsupported(format!(
+                  "Sgt of {:?}, {:?} is not supported",
+                  arg1, arg2
+                )))
+              }
+            }
+            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
+              "{:?}",
+              line.sort().tag()
+            ))),
+          }
+        }
         btor2tools::Btor2Tag::Sgte => Ok(()),
         btor2tools::Btor2Tag::Slt => Ok(()),
         btor2tools::Btor2Tag::Slte => Ok(()),
