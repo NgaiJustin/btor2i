@@ -1,7 +1,6 @@
 use crate::bvec::BitVector;
 use crate::error;
 use crate::error::InterpError;
-// use btor2tools::Btor2LineIterator;
 use btor2tools::Btor2Line;
 use btor2tools::Btor2SortContent;
 use btor2tools::Btor2SortTag;
@@ -9,10 +8,8 @@ use num_bigint::BigInt;
 use num_traits::{Num, One};
 use std::collections::HashMap;
 use std::convert::From;
-use std::f32::consts::E;
 use std::fmt;
 use std::slice::Iter;
-use std::str::FromStr;
 use std::vec;
 
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
@@ -155,625 +152,45 @@ pub fn interpret(prog_iterator: Iter<Btor2Line>, env: &mut Environment) -> Resul
         btor2tools::Btor2Tag::Ulte => eval_binary_bool_op(env, line, BitVector::ulte),
 
         // binary - bit-wise
-        btor2tools::Btor2Tag::And => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::and(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "And of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Nand => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::nand(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Nand of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Nor => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::nor(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Nor of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Or => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::or(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Or of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Xnor => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::xnor(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Xnor of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Xor => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::xor(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Xor of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
+        btor2tools::Btor2Tag::And => eval_binary_op(env, line, BitVector::and),
+        btor2tools::Btor2Tag::Nand => eval_binary_op(env, line, BitVector::nand),
+        btor2tools::Btor2Tag::Nor => eval_binary_op(env, line, BitVector::nor),
+        btor2tools::Btor2Tag::Or => eval_binary_op(env, line, BitVector::or),
+        btor2tools::Btor2Tag::Xnor => eval_binary_op(env, line, BitVector::xnor),
+        btor2tools::Btor2Tag::Xor => eval_binary_op(env, line, BitVector::xor),
 
         // binary - rotate, shift
-        btor2tools::Btor2Tag::Rol => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::rol(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Rol of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Ror => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::ror(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Ror of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Sll => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::sll(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Sll of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Sra => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::sra(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Sra of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Srl => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::srl(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Srl of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
+        btor2tools::Btor2Tag::Rol => eval_binary_op(env, line, BitVector::rol),
+        btor2tools::Btor2Tag::Ror => eval_binary_op(env, line, BitVector::ror),
+        btor2tools::Btor2Tag::Sll => eval_binary_op(env, line, BitVector::sll),
+        btor2tools::Btor2Tag::Sra => eval_binary_op(env, line, BitVector::sra),
+        btor2tools::Btor2Tag::Srl => eval_binary_op(env, line, BitVector::srl),
 
         // binary - arithmetic
-        btor2tools::Btor2Tag::Add => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::add(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Addition of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Mul => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::mul(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Multiplication of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Sdiv => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::sdiv(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Sdiv of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Udiv => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::udiv(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Udiv of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Smod => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::smod(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Smod of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Srem => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::srem(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Srem of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Urem => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::urem(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Urem of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
-        btor2tools::Btor2Tag::Sub => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::sub(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Subtraction of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
+        btor2tools::Btor2Tag::Add => eval_binary_op(env, line, BitVector::add),
+        btor2tools::Btor2Tag::Mul => eval_binary_op(env, line, BitVector::mul),
+        btor2tools::Btor2Tag::Sdiv => eval_binary_op(env, line, BitVector::sdiv),
+        btor2tools::Btor2Tag::Udiv => eval_binary_op(env, line, BitVector::udiv),
+        btor2tools::Btor2Tag::Smod => eval_binary_op(env, line, BitVector::smod),
+        btor2tools::Btor2Tag::Srem => eval_binary_op(env, line, BitVector::srem),
+        btor2tools::Btor2Tag::Urem => eval_binary_op(env, line, BitVector::urem),
+        btor2tools::Btor2Tag::Sub => eval_binary_op(env, line, BitVector::sub),
 
         // binary - overflow
-        btor2tools::Btor2Tag::Saddo => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::saddo(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Saddo of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Saddo of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Uaddo => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::uaddo(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Uaddo of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Uaddo of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Sdivo => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::sdivo(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Sdivo of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Sdivo of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
+        btor2tools::Btor2Tag::Saddo => eval_binary_overflow_op(env, line, BitVector::saddo),
+        btor2tools::Btor2Tag::Uaddo => eval_binary_overflow_op(env, line, BitVector::uaddo),
+        btor2tools::Btor2Tag::Sdivo => eval_binary_overflow_op(env, line, BitVector::sdivo),
         // btor2tools::Btor2Tag::Udivo => Ok(()),    Unsigned division never overflows :D
-        btor2tools::Btor2Tag::Smulo => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::smulo(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Smulo of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Smulo of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Umulo => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::umulo(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Umulo of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Umulo of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Ssubo => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::ssubo(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Ssubo of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Ssubo of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
-        btor2tools::Btor2Tag::Usubo => {
-          let sort = line.sort();
-          match sort.tag() {
-            Btor2SortTag::Bitvec => {
-              assert_eq!(line.args().len(), 2);
-              let arg1 = env.get(line.args()[0] as usize);
-              let arg2 = env.get(line.args()[1] as usize);
-              if let Btor2SortContent::Bitvec { width } = line.sort().content() {
-                if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-                  if (width as usize) != 1 {
-                    return Err(error::InterpError::BadFuncArgWidth(
-                      "arg1".to_string(),
-                      1,
-                      arg1.width(),
-                    ));
-                  }
-                  let bv2 = BitVector::from_bool(BitVector::usubo(arg1, arg2));
-                  env.set(id.try_into().unwrap(), Value::BitVector(bv2));
-                  Ok(())
-                } else {
-                  Err(error::InterpError::Unsupported(format!(
-                    "Usubo of {:?}, {:?} is not supported",
-                    arg1, arg2
-                  )))
-                }
-              } else {
-                Err(error::InterpError::Unsupported(format!(
-                  "Usubo of {:?}, {:?} is not supported",
-                  arg1, arg2
-                )))
-              }
-            }
-            Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
-              "{:?}",
-              line.sort().tag()
-            ))),
-          }
-        }
+        btor2tools::Btor2Tag::Smulo => eval_binary_overflow_op(env, line, BitVector::smulo),
+        btor2tools::Btor2Tag::Umulo => eval_binary_overflow_op(env, line, BitVector::umulo),
+        btor2tools::Btor2Tag::Ssubo => eval_binary_overflow_op(env, line, BitVector::ssubo),
+        btor2tools::Btor2Tag::Usubo => eval_binary_overflow_op(env, line, BitVector::usubo),
 
         // binary - concat
-        btor2tools::Btor2Tag::Concat => {
-          assert_eq!(line.args().len(), 2);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
-            let result = BitVector::concat(arg1, arg2);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Concat of {:?} and {:?} is not supported",
-              arg1, arg2
-            )));
-          }
-          Ok(())
-        }
+        btor2tools::Btor2Tag::Concat => eval_binary_op(env, line, BitVector::concat),
 
         // ternary - conditional
-        btor2tools::Btor2Tag::Ite => {
-          assert_eq!(line.args().len(), 3);
-          let arg1 = env.get(line.args()[0] as usize);
-          let arg2 = env.get(line.args()[1] as usize);
-          let arg3 = env.get(line.args()[2] as usize);
-          if let (Value::BitVector(arg1), Value::BitVector(arg2), Value::BitVector(arg3)) =
-            (arg1, arg2, arg3)
-          {
-            let result = BitVector::ite(arg1, arg2, arg3);
-            env.set(id.try_into().unwrap(), Value::BitVector(result));
-          } else {
-            return Err(error::InterpError::Unsupported(format!(
-              "Ite of {:?}, {:?} and {:?} is not supported",
-              arg1, arg2, arg3
-            )));
-          }
-          Ok(())
-        }
+        btor2tools::Btor2Tag::Ite => eval_ternary_op(env, line, BitVector::ite),
 
         // Unsupported: arrays, state, assertions
         btor2tools::Btor2Tag::Bad
@@ -1052,6 +469,97 @@ fn eval_binary_bool_op(
       line.sort().tag()
     ))),
   }
+}
+
+/// Handles the `and`, `nand`, `nor`, `or`, `xnor`, `xor`, `rol`, `ror`, `sll`,
+/// `sra`, `srl`, `add`, `mul`, `sdiv`, `udiv`, `smod`, `srem`, `urem`, `sub`
+/// statements.
+fn eval_binary_op(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+  bv_fn: fn(&BitVector, &BitVector) -> BitVector,
+) -> Result<(), error::InterpError> {
+  assert_eq!(line.args().len(), 2);
+  let arg1 = env.get(line.args()[0] as usize);
+  let arg2 = env.get(line.args()[1] as usize);
+
+  if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+    let result = bv_fn(arg1, arg2);
+    env.set(line.id().try_into().unwrap(), Value::BitVector(result));
+  } else {
+    return Err(error::InterpError::Unsupported(format!(
+      "And of {:?} and {:?} is not supported",
+      arg1, arg2
+    )));
+  }
+
+  Ok(())
+}
+
+fn eval_binary_overflow_op(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+  binary_bool_fn: fn(&BitVector, &BitVector) -> bool,
+) -> Result<(), error::InterpError> {
+  let sort = line.sort();
+  match sort.tag() {
+    Btor2SortTag::Bitvec => {
+      assert_eq!(line.args().len(), 2);
+      let arg1 = env.get(line.args()[0] as usize);
+      let arg2 = env.get(line.args()[1] as usize);
+      if let Btor2SortContent::Bitvec { width } = line.sort().content() {
+        if let (Value::BitVector(arg1), Value::BitVector(arg2)) = (arg1, arg2) {
+          if (width as usize) != 1 {
+            return Err(error::InterpError::BadFuncArgWidth(
+              "arg1".to_string(),
+              1,
+              arg1.width(),
+            ));
+          }
+          let bv2 = BitVector::from_bool(binary_bool_fn(arg1, arg2));
+          env.set(id.try_into().unwrap(), Value::BitVector(bv2));
+          Ok(())
+        } else {
+          Err(error::InterpError::Unsupported(format!(
+            "Saddo of {:?}, {:?} is not supported",
+            arg1, arg2
+          )))
+        }
+      } else {
+        Err(error::InterpError::Unsupported(format!(
+          "Saddo of {:?}, {:?} is not supported",
+          arg1, arg2
+        )))
+      }
+    }
+    Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
+      "{:?}",
+      line.sort().tag()
+    ))),
+  }
+}
+
+fn eval_ternary_op(
+  env: &mut Environment,
+  line: &btor2tools::Btor2Line,
+  ternary_fn: fn(&BitVector, &BitVector, &BitVector) -> BitVector,
+) -> Result<(), error::InterpError> {
+  assert_eq!(line.args().len(), 3);
+  let arg1 = env.get(line.args()[0] as usize);
+  let arg2 = env.get(line.args()[1] as usize);
+  let arg3 = env.get(line.args()[2] as usize);
+  if let (Value::BitVector(arg1), Value::BitVector(arg2), Value::BitVector(arg3)) =
+    (arg1, arg2, arg3)
+  {
+    let result = BitVector::ite(arg1, arg2, arg3);
+    env.set(line.id().try_into().unwrap(), Value::BitVector(result));
+  } else {
+    return Err(error::InterpError::Unsupported(format!(
+      "Ite of {:?}, {:?} and {:?} is not supported",
+      arg1, arg2, arg3
+    )));
+  }
+  Ok(())
 }
 
 // TODO: eventually remove pub and make a seperate pub function as a main entry point to the interpreter, for now this is main.rs
