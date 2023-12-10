@@ -1,13 +1,9 @@
 use num_traits::{One, Zero};
-use std::{
-  cmp::Ordering,
-};
+use std::cmp::Ordering;
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
-use std::{
-  iter::{once},
-};
+use std::iter::once;
 
 #[derive(Debug)]
 pub struct SharedEnvironment {
@@ -325,24 +321,50 @@ impl SharedEnvironment {
     };
     self.shared_bits[self.offsets[i3]..self.offsets[i3] + 1].fill(ans);
   }
-  pub fn add(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+
+  pub fn add(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_bigint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_bigint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let c = a + b;
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
-  pub fn mul(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn mul(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_bigint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_bigint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let c = a * b;
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
-  pub fn sdiv(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn sdiv(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_bigint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_bigint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let c = a / b;
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
-  pub fn udiv(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn udiv(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_biguint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_biguint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let c = a / b;
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
-  pub fn smod(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn smod(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_bigint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_bigint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let c = a % b;
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
   pub fn srem(&mut self, _i1: usize, _i2: usize, _i3: usize) {
@@ -369,8 +391,8 @@ impl SharedEnvironment {
     todo!()
   }
 
-  pub fn udivo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn udivo(&mut self, i1: usize, i2: usize, i3: usize) {
+    self.shared_bits[self.offsets[i3]..self.offsets[i3] + 1].fill(false);
   }
 
   pub fn smulo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
