@@ -1,16 +1,12 @@
 use num_traits::{One, Zero};
 use std::{
   cmp::Ordering,
-  convert::From,
-  fmt::Display,
-  ops::{Add, Mul, Neg},
 };
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
 use std::{
-  iter::{self, once},
-  ops::BitXorAssign,
+  iter::{once},
 };
 
 #[derive(Debug)]
@@ -25,7 +21,7 @@ impl SharedEnvironment {
       .chain(once(&0usize))
       .chain(node_sorts.iter())
       .scan(0usize, |state, &x| {
-        *state = *state + x;
+        *state += x;
         Some(*state)
       })
       .collect::<Vec<_>>();
@@ -44,7 +40,7 @@ impl SharedEnvironment {
     &self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]]
   }
 
-  pub fn sext(&mut self, i1: usize, i2: usize) -> () {
+  pub fn sext(&mut self, i1: usize, i2: usize) {
     let old_start = self.offsets[i1];
     let old_end = self.offsets[i1 + 1];
     let new_start = self.offsets[i2];
@@ -54,7 +50,7 @@ impl SharedEnvironment {
     self.shared_bits[new_start + (old_end - old_start)..new_end].fill(first_bit);
   }
 
-  pub fn uext(&mut self, i1: usize, i2: usize) -> () {
+  pub fn uext(&mut self, i1: usize, i2: usize) {
     let old_start = self.offsets[i1];
     let old_end = self.offsets[i1 + 1];
     let new_start = self.offsets[i2];
@@ -157,7 +153,7 @@ impl SharedEnvironment {
     for i in 0..slice.len() {
       ans.set_bit(i.try_into().unwrap(), slice[i])
     }
-    return ans;
+    ans
   }
 
   pub fn inc(&mut self, i1: usize, i2: usize) {
@@ -165,7 +161,7 @@ impl SharedEnvironment {
       .shared_bits
       .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i2]);
     let dest = self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]].as_mut();
-    match (dest.first_zero()) {
+    match dest.first_zero() {
       Some(i) => {
         dest[i..i + 1].fill(true);
         dest[..i].fill(false);
@@ -181,7 +177,7 @@ impl SharedEnvironment {
       .shared_bits
       .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i2]);
     let dest = self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]].as_mut();
-    match (dest.first_one()) {
+    match dest.first_one() {
       Some(i) => {
         dest[i..i + 1].fill(false);
         dest[..i].fill(true);
@@ -198,7 +194,7 @@ impl SharedEnvironment {
     let dest = self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]].as_mut();
     dest.copy_from_bitslice(&bitwise_neg);
 
-    match (dest.first_zero()) {
+    match dest.first_zero() {
       Some(i) => {
         dest[i..i + 1].fill(true);
         dest[..i].fill(false);
@@ -255,7 +251,7 @@ impl SharedEnvironment {
   fn compare_unsigned(&self, i1: usize, i2: usize) -> Ordering {
     let a = &self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]];
     let b = &self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]];
-    a.cmp(&b)
+    a.cmp(b)
   }
 
   pub fn sgt(&mut self, i1: usize, i2: usize, i3: usize) {
@@ -329,8 +325,93 @@ impl SharedEnvironment {
     };
     self.shared_bits[self.offsets[i3]..self.offsets[i3] + 1].fill(ans);
   }
+  pub fn add(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
 
-  //   pub fn ro
+  pub fn mul(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn sdiv(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn udiv(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn smod(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn srem(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn urem(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn sub(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn saddo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn uaddo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn sdivo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn udivo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn smulo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn umulo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn ssubo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn usubo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn ite(&mut self, _i1: usize, _i2: usize, _i3: usize, _i4: usize) {
+    todo!()
+  }
+
+  pub fn rol(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn ror(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn sll(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn sra(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
+
+  pub fn srl(&mut self, _i1: usize, _i2: usize, _i3: usize) {
+    todo!()
+  }
 }
 
 #[cfg(test)]

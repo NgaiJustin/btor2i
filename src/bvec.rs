@@ -514,7 +514,7 @@ mod tests {
         let prod = BitVector::mul(&unsigned_numbers[i], &unsigned_numbers[j]);
 
         // implementation-specific, behavior should be undefined in second case
-        let sub_index = if i >= j { i - j } else { i + max - j };
+        let _sub_index = if i >= j { i - j } else { i + max - j };
 
         assert!(naive_test_eq(&sum, &unsigned_numbers[(i + j) % max]));
         // assert!(naive_test_eq(&diff, &unsigned_numbers[sub_index % max]));

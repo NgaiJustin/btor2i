@@ -31,10 +31,7 @@ fn main() -> InterpResult<()> {
     .read_lines(&btor2_file)
     .unwrap()
     .filter(|line| matches!(line.tag(), btor2tools::Btor2Tag::Input))
-    .filter_map(|line| match line.symbol() {
-      Some(symbol_cstr) => Some(symbol_cstr.to_string_lossy().into_owned()),
-      None => None, // skip unnamed inputs (default to undef)
-    })
+    .filter_map(|line| line.symbol().map(|symbol_cstr| symbol_cstr.to_string_lossy().into_owned()))
     .collect::<Vec<_>>();
 
   // Init environment
