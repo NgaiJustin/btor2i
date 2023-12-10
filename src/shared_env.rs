@@ -32,41 +32,59 @@ impl SharedEnvironment {
     &self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]]
   }
 
-  fn and(&self, i1: int, i2: int) -> &BitSlice {
+  pub fn not(&self, i1: usize) -> &BitSlice {
+    let s1 = self.get(i1);
+    !s1
+  }
+
+  pub fn and(&self, i1: usize, i2: usize) -> &BitSlice {
     let s1 = self.get(i1);
     let s2 = self.get(i2);
     s1 & s2
   }
 
-  fn nand(&self, i1: int, i2: int) -> &BitSlice {
+  pub fn nand(&self, i1: usize, i2: usize) -> &BitSlice {
     let s1 = self.get(i1);
     let s2 = self.get(i2);
     !(s1 & s2)
   }
 
-  fn nor(&self, i1: int, i2: int) -> &BitSlice {
+  pub fn nor(&self, i1: usize, i2: usize) -> &BitSlice {
     let s1 = self.get(i1);
     let s2 = self.get(i2);
     !(s1 | s2)
   }
 
-  fn or(&self, i1: int, i2: int) -> &BitSlice {
+  pub fn or(&self, i1: usize, i2: usize) -> &BitSlice {
     let s1 = self.get(i1);
     let s2 = self.get(i2);
     s1 | s2
   }
 
-  fn xnor(&self, i1: int, i2: int) -> &BitSlice {
+  pub fn xnor(&self, i1: usize, i2: usize) -> &BitSlice {
     let s1 = self.get(i1);
     let s2 = self.get(i2);
     !(s1 ^ s2)
   }
 
-  fn xor(&self, i1: int, i2: int) -> &BitSlice {
+  pub fn xor(&self, i1: usize, i2: usize) -> &BitSlice {
     let s1 = self.get(i1);
     let s2 = self.get(i2);
     s1 ^ s2
   }
+
+  pub fn slice(&self, i1: usize, l: usize, u: usize) -> &BitSlice {
+    let s1 = self.get(i1);
+    &s1[l..(u+1)]
+  }
+
+  pub fn cat(&self, i1: usize, i2: usize) -> &BitSlice {
+    let s1 = self.get(i1);
+    let s2 = self.get(i2);
+    [s1, s2].concat()
+  }
+
+
 }
 
 
