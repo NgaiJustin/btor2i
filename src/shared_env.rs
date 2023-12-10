@@ -31,7 +31,45 @@ impl SharedEnvironment {
   fn get(&mut self, idx: usize) -> &BitSlice {
     &self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]]
   }
+
+  fn and(&self, i1: int, i2: int) -> &BitSlice {
+    let s1 = self.get(i1);
+    let s2 = self.get(i2);
+    s1 & s2
+  }
+
+  fn nand(&self, i1: int, i2: int) -> &BitSlice {
+    let s1 = self.get(i1);
+    let s2 = self.get(i2);
+    !(s1 & s2)
+  }
+
+  fn nor(&self, i1: int, i2: int) -> &BitSlice {
+    let s1 = self.get(i1);
+    let s2 = self.get(i2);
+    !(s1 | s2)
+  }
+
+  fn or(&self, i1: int, i2: int) -> &BitSlice {
+    let s1 = self.get(i1);
+    let s2 = self.get(i2);
+    s1 | s2
+  }
+
+  fn xnor(&self, i1: int, i2: int) -> &BitSlice {
+    let s1 = self.get(i1);
+    let s2 = self.get(i2);
+    !(s1 ^ s2)
+  }
+
+  fn xor(&self, i1: int, i2: int) -> &BitSlice {
+    let s1 = self.get(i1);
+    let s2 = self.get(i2);
+    s1 ^ s2
+  }
 }
+
+
 
 #[cfg(test)]
 mod tests {
