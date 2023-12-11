@@ -7,7 +7,6 @@ use btor2tools::Btor2SortTag;
 use num_bigint::BigInt;
 use num_traits::Num;
 use std::collections::HashMap;
-use std::convert::From;
 use std::fmt;
 use std::slice::Iter;
 use std::vec;
@@ -252,16 +251,17 @@ fn eval_input_op(
     Some(symbol_cstr) => {
       let input_name = symbol_cstr.to_string_lossy().into_owned();
 
-      match line.sort().tag() {
-        Btor2SortTag::Bitvec => {
+      match line.sort().content() {
+        Btor2SortContent::Bitvec { width } => {
           // convert input to bitvector
           let input_val = env.args.get(&input_name).unwrap();
-          let input_bits = From::from(*input_val);
+          // let input_bits = From::from(*input_val);
+          let input_bits = BitVector::from_int(*input_val, width.try_into().unwrap());
           env.set(line.id().try_into().unwrap(), Value::BitVector(input_bits));
 
           Ok(())
         }
-        Btor2SortTag::Array => Err(error::InterpError::Unsupported(format!(
+        Btor2SortContent::Array { .. } => Err(error::InterpError::Unsupported(format!(
           "{:?}",
           line.sort().tag()
         ))),

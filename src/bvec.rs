@@ -441,12 +441,13 @@ impl BitVector {
     let mut bits = BitVec::new();
     bits.reserve(bv1.bits.len() + bv2.bits.len());
     for i in 0..bv1.bits.len() {
-      bits.set(i, bv1.bits[i]);
+      bits.push(bv1.bits[i]);
     }
     for i in 0..bv2.bits.len() {
-      bits.set(bv1.bits.len() + i, bv2.bits[i]);
+      bits.push(bv2.bits[i]);
     }
-    BitVector { bits }
+    let ans = BitVector { bits };
+    ans
   }
 
   pub fn ite(cond: &BitVector, bv1: &BitVector, bv2: &BitVector) -> Self {
@@ -456,6 +457,14 @@ impl BitVector {
     } else {
       bv2.clone()
     }
+  }
+
+  pub fn from_int(val: usize, len: usize) -> Self {
+    let mut bits = BitVec::new();
+    for i in 0..len {
+      bits.push((val >> i) & 1 == 1);
+    }
+    BitVector { bits }
   }
 }
 

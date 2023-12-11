@@ -1,16 +1,16 @@
 Arguments:
-left: 123
-right: 321
+left: 7
+right: 7
 
 Environment:
 0: _
 1: _
-2: 123
-3: 321
+2: 7
+3: 7
 4: _
-5: _
+5: 30064771079
 6: _
 
 Output:
-out: _
+out: 30064771079
 
