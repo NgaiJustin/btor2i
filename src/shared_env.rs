@@ -1,8 +1,8 @@
+use num_integer::Integer;
 use num_traits::{One, Zero};
 use std::cmp::Ordering;
-use std::ops::Rem;
 use std::fmt;
-use num_integer::Integer;
+use std::ops::Rem;
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
@@ -10,23 +10,29 @@ use std::iter::once;
 
 #[derive(Debug)]
 pub struct SharedEnvironment {
-  pub shared_bits: BitVec<usize, Lsb0>, // RI: integers are little-endian
-  offsets: Vec<usize>,                  // offsets[i] = start of node i
+  shared_bits: BitVec<usize, Lsb0>, // RI: integers are little-endian
+  offsets: Vec<usize>,              // offsets[i] = start of node i
 }
 
 impl fmt::Display for SharedEnvironment {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-
     write!(f, "\nEnvironment:\n")?;
 
-    for i in 0..self.offsets.len()-1 {
-      if self.offsets[i] == self.offsets[i+1] {
+    for i in 0..self.offsets.len() - 1 {
+      if self.offsets[i] == self.offsets[i + 1] {
         writeln!(f, "{} : _", i)?;
       } else {
-        if self.offsets[i+1] - self.offsets[i] > (usize::BITS).try_into().unwrap() {
+        if self.offsets[i + 1] - self.offsets[i] > (usize::BITS).try_into().unwrap() {
           writeln!(f, "{} : too large to display", i)?;
         }
-        writeln!(f, "{} : {}", i, SharedEnvironment::slice_to_usize(&self.shared_bits[self.offsets[i]..self.offsets[i+1]]))?;
+        writeln!(
+          f,
+          "{} : {}",
+          i,
+          SharedEnvironment::slice_to_usize(
+            &self.shared_bits[self.offsets[i]..self.offsets[i + 1]]
+          )
+        )?;
       }
     }
 

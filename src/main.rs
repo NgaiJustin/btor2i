@@ -56,7 +56,7 @@ fn main() -> InterpResult<()> {
   interp::interpret(btor2_lines.iter(), &mut s_env)?;
 
   // // Print result of execution
-  // println!("{}", env);
+  println!("{}", s_env);
 
   // Extract outputs
   btor2_lines.iter().for_each(|line| {
@@ -68,8 +68,6 @@ fn main() -> InterpResult<()> {
       println!("{}: {}", output_name, output_val);
     }
   });
-
-  println!("s_env: {:?}", s_env.shared_bits);
 
   // print to stderr the time it took to run
   let duration = start.elapsed();
