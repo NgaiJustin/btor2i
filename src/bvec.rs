@@ -446,7 +446,6 @@ impl BitVector {
     for i in 0..bv2.bits.len() {
       bits.push(bv2.bits[i]);
     }
-    
     BitVector { bits }
   }
 

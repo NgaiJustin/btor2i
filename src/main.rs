@@ -1,6 +1,7 @@
 use btor2i::cli;
 use btor2i::error::InterpResult;
 use btor2i::interp;
+use btor2i::shared_env;
 use btor2tools::Btor2Parser;
 use clap::Parser;
 use std::io;
@@ -26,22 +27,24 @@ fn main() -> InterpResult<()> {
   let mut parser = Btor2Parser::new();
   let btor2_lines = parser.read_lines(&btor2_file).unwrap().collect::<Vec<_>>();
 
-  // Flag inputs
-  let arg_names = btor2_lines
+  // Collect node sorts
+  let node_sorts = btor2_lines
     .iter()
-    .filter(|line| matches!(line.tag(), btor2tools::Btor2Tag::Input))
-    .filter_map(|line| {
-      line
-        .symbol()
-        .map(|symbol_cstr| symbol_cstr.to_string_lossy().into_owned())
+    .map(|line| match line.tag() {
+      btor2tools::Btor2Tag::Sort | btor2tools::Btor2Tag::Output => 0,
+      _ => match line.sort().content() {
+        btor2tools::Btor2SortContent::Bitvec { width } => usize::try_from(width).unwrap(),
+        btor2tools::Btor2SortContent::Array { .. } => 0, // TODO: handle arrays
+      },
     })
     .collect::<Vec<_>>();
 
   // Init environment
-  let mut env = interp::Environment::new(btor2_lines.len() + 1);
+  // let mut env = interp::Environment::new(btor2_lines.len() + 1);
+  let mut s_env = shared_env::SharedEnvironment::new(node_sorts);
 
   // Parse inputs
-  match interp::parse_inputs(&mut env, &arg_names, &args.inputs) {
+  match interp::parse_inputs(&mut s_env, &btor2_lines, &args.inputs) {
     Ok(()) => {}
     Err(e) => {
       eprintln!("{}", e);
@@ -50,10 +53,23 @@ fn main() -> InterpResult<()> {
   };
 
   // Main interpreter loop
-  interp::interpret(btor2_lines.iter(), &mut env)?;
+  interp::interpret(btor2_lines.iter(), &mut s_env)?;
 
-  // Print result of execution
-  println!("{}", env);
+  // // Print result of execution
+  // println!("{}", env);
+
+  // Extract outputs
+  btor2_lines.iter().for_each(|line| {
+    if let btor2tools::Btor2Tag::Output = line.tag() {
+      let output_name = line.symbol().unwrap().to_string_lossy().into_owned();
+      let src_node_idx = line.args()[0] as usize;
+      let output_val = s_env.get(src_node_idx);
+
+      println!("{}: {}", output_name, output_val);
+    }
+  });
+
+  println!("s_env: {:?}", s_env.shared_bits);
 
   // print to stderr the time it took to run
   let duration = start.elapsed();
