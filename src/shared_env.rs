@@ -1,8 +1,8 @@
+use num_integer::Integer;
 use num_traits::{One, Zero};
 use std::cmp::Ordering;
+use std::fmt;
 use std::ops::Rem;
-
-use num_integer::Integer;
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
@@ -14,8 +14,34 @@ pub struct SharedEnvironment {
   offsets: Vec<usize>,              // offsets[i] = start of node i
 }
 
+impl fmt::Display for SharedEnvironment {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    write!(f, "\nEnvironment:\n")?;
+
+    for i in 0..self.offsets.len() - 1 {
+      if self.offsets[i] == self.offsets[i + 1] {
+        writeln!(f, "{} : _", i)?;
+      } else {
+        if self.offsets[i + 1] - self.offsets[i] > (usize::BITS).try_into().unwrap() {
+          writeln!(f, "{} : too large to display", i)?;
+        }
+        writeln!(
+          f,
+          "{} : {}",
+          i,
+          SharedEnvironment::slice_to_usize(
+            &self.shared_bits[self.offsets[i]..self.offsets[i + 1]]
+          )
+        )?;
+      }
+    }
+
+    Ok(())
+  }
+}
+
 impl SharedEnvironment {
-  fn new(node_sorts: Vec<usize>) -> Self {
+  pub fn new(node_sorts: Vec<usize>) -> Self {
     let offsets = once(&0usize)
       .chain(once(&0usize))
       .chain(node_sorts.iter())
@@ -31,11 +57,20 @@ impl SharedEnvironment {
     }
   }
 
-  fn set(&mut self, idx: usize, value: &BitSlice) {
+  /// Sets the bitslice corresponding to the node at with node_id `idx`
+  pub fn set(&mut self, idx: usize, value: &BitSlice) {
     self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]].copy_from_bitslice(value);
   }
 
-  fn get(&mut self, idx: usize) -> &BitSlice {
+  /// Sets the bitslice corresponding to the node at with node_id `idx`, used for inputs
+  pub fn set_vec(&mut self, idx: usize, value: Vec<bool>) {
+    for i in self.offsets[idx]..self.offsets[idx + 1] {
+      self.shared_bits.set(i, value[i - self.offsets[idx]]);
+    }
+  }
+
+  /// Returns the bitslice corresponding to the node at with node_id `idx`
+  pub fn get(&mut self, idx: usize) -> &BitSlice {
     &self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]]
   }
 
@@ -71,7 +106,7 @@ impl SharedEnvironment {
     let old_end = self.offsets[i1 + 1];
     let new_start = self.offsets[i2];
     let new_end = self.offsets[i2 + 1];
-    let mut rhs = BitVec::repeat(false, old_end - old_start);
+    let mut rhs = BitVec::repeat(true, old_end - old_start);
     rhs ^= &self.shared_bits[old_start..old_end];
     self.shared_bits[new_start..new_end].copy_from_bitslice(rhs.as_bitslice());
   }
@@ -500,6 +535,25 @@ impl SharedEnvironment {
       .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i3]);
     self.shared_bits[self.offsets[i3]..self.offsets[i3 + 1]].shift_left(shift_amount);
   }
+
+  pub fn one(&mut self, i1: usize) {
+    self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]].fill(false);
+    self.shared_bits[self.offsets[i1]..self.offsets[i1] + 1].fill(true); // little endian
+  }
+
+  pub fn ones(&mut self, i1: usize) {
+    self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]].fill(true);
+  }
+
+  pub fn zero(&mut self, i1: usize) {
+    self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]].fill(false);
+  }
+
+  pub fn const_(&mut self, i1: usize, value: Vec<bool>) {
+    for i in self.offsets[i1]..self.offsets[i1 + 1] {
+      self.shared_bits[i..i + 1].fill(value[i - self.offsets[i1]]);
+    }
+  }
 }
 
 #[cfg(test)]
@@ -531,9 +585,9 @@ mod tests {
     assert!(s_env.get(1) == bits![0, 0]);
     assert!(s_env.get(2) == bits![0, 0, 0, 0, 0, 0, 0, 0]);
     assert!(s_env.get(3) == bits![0, 0, 0, 0, 0, 0]);
-    s_env.set(1, bits![0, 1]);
-    s_env.set(2, bits![0, 1, 0, 1, 1, 1, 1, 1]);
-    s_env.set(3, bits![0, 1, 0, 0, 0, 0]);
+    s_env.set_vec(1, vec![false, true]);
+    s_env.set_vec(2, vec![false, true, false, true, true, true, true, true]);
+    s_env.set_vec(3, vec![false, true, false, false, false, false]);
 
     s_env.sll(2, 1, 4);
     s_env.srl(2, 1, 5);
