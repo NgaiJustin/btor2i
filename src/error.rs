@@ -10,6 +10,9 @@ pub enum InterpError {
   #[error("Expected `{0}` instruction arguments, found `{1}`")]
   BadNumArgs(usize, usize), // (expected, actual)
 
+  #[error("{0} is not a valid argment name")]
+  BadFuncArgName(String), // (expected, actual)
+
   #[error("Expected int args, found `{0}`")]
   BadFuncArgType(String), // (actual)
 

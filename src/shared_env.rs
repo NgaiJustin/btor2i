@@ -10,8 +10,8 @@ use std::iter::once;
 
 #[derive(Debug)]
 pub struct SharedEnvironment {
-  shared_bits: BitVec<usize, Lsb0>, // RI: integers are little-endian
-  offsets: Vec<usize>,              // offsets[i] = start of node i
+  pub shared_bits: BitVec<usize, Lsb0>, // RI: integers are little-endian
+  offsets: Vec<usize>,                  // offsets[i] = start of node i
 }
 
 impl SharedEnvironment {
@@ -32,7 +32,7 @@ impl SharedEnvironment {
   }
 
   /// Sets the bitslice corresponding to the node at with node_id `idx`
-  fn set(&mut self, idx: usize, value: &BitSlice) {
+  pub fn set(&mut self, idx: usize, value: &BitSlice) {
     self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]].copy_from_bitslice(value);
   }
 
@@ -44,7 +44,7 @@ impl SharedEnvironment {
   }
 
   /// Returns the bitslice corresponding to the node at with node_id `idx`
-  fn get(&mut self, idx: usize) -> &BitSlice {
+  pub fn get(&mut self, idx: usize) -> &BitSlice {
     &self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]]
   }
 
@@ -80,7 +80,7 @@ impl SharedEnvironment {
     let old_end = self.offsets[i1 + 1];
     let new_start = self.offsets[i2];
     let new_end = self.offsets[i2 + 1];
-    let mut rhs = BitVec::repeat(false, old_end - old_start);
+    let mut rhs = BitVec::repeat(true, old_end - old_start);
     rhs ^= &self.shared_bits[old_start..old_end];
     self.shared_bits[new_start..new_end].copy_from_bitslice(rhs.as_bitslice());
   }
@@ -508,6 +508,25 @@ impl SharedEnvironment {
       .shared_bits
       .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i3]);
     self.shared_bits[self.offsets[i3]..self.offsets[i3 + 1]].shift_left(shift_amount);
+  }
+
+  pub fn one(&mut self, i1: usize) {
+    self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]].fill(false);
+    self.shared_bits[self.offsets[i1]..self.offsets[i1] + 1].fill(true); // little endian
+  }
+
+  pub fn ones(&mut self, i1: usize) {
+    self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]].fill(true);
+  }
+
+  pub fn zero(&mut self, i1: usize) {
+    self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]].fill(false);
+  }
+
+  pub fn const_(&mut self, i1: usize, value: Vec<bool>) {
+    for i in self.offsets[i1]..self.offsets[i1 + 1] {
+      self.shared_bits[i..i + 1].fill(value[i - self.offsets[i1]]);
+    }
   }
 }
 
