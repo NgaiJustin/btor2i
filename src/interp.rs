@@ -422,11 +422,11 @@ pub fn parse_inputs(
 
         env.set_vec(*idx, arg_as_bin);
 
-        return Ok(());
+        Ok(())
       } else {
-        return Err(InterpError::BadFuncArgType(
+        Err(InterpError::BadFuncArgType(
           "Input must be in binary format".to_string(),
-        ));
+        ))
       }
     })
   }

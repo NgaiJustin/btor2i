@@ -59,15 +59,14 @@ fn main() -> InterpResult<()> {
   // println!("{}", env);
 
   // Extract outputs
-  btor2_lines.iter().for_each(|line| match line.tag() {
-    btor2tools::Btor2Tag::Output => {
+  btor2_lines.iter().for_each(|line| {
+    if let btor2tools::Btor2Tag::Output = line.tag() {
       let output_name = line.symbol().unwrap().to_string_lossy().into_owned();
       let src_node_idx = line.args()[0] as usize;
       let output_val = s_env.get(src_node_idx);
 
       println!("{}: {}", output_name, output_val);
     }
-    _ => {}
   });
 
   println!("s_env: {:?}", s_env.shared_bits);
