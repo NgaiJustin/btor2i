@@ -559,4 +559,36 @@ mod tests {
     assert!(s_env.get(4) == bits![0, 1, 0, 0, 0, 1, 0, 0]);
     assert!(s_env.get(5) == bits![1, 0, 1, 0, 1, 0, 0, 0]);
   }
+
+  #[test]
+  fn test_bitwise() {
+    let node_widths = vec![4, 4, 4, 4, 4, 4, 4, 4];
+    let mut s_env = SharedEnvironment::new(node_widths);
+    s_env.set(1, bits![0, 1, 0, 1]);
+    s_env.set(2, bits![0, 0, 1, 1]);
+    s_env.and(1, 2, 3);
+    s_env.nand(1, 2, 4);
+    s_env.or(1, 2, 5);
+    s_env.nor(1, 2, 6);
+    s_env.xor(1, 2, 7);
+    s_env.xnor(1, 2, 8);
+    assert!(s_env.get(3) == bits![0, 0, 0, 1]);
+    assert!(s_env.get(4) == bits![1, 1, 1, 0]);
+    assert!(s_env.get(5) == bits![0, 1, 1, 1]);
+    assert!(s_env.get(6) == bits![1, 0, 0, 0]);
+    assert!(s_env.get(7) == bits![0, 1, 1, 0]);
+    assert!(s_env.get(8) == bits![1, 0, 0, 1]);
+  }
+
+  #[test]
+  fn test_comparisons() {
+    let node_widths = vec![4, 4, 1, 1];
+    let mut s_env = SharedEnvironment::new(node_widths);
+    s_env.set(1, bits![0, 1, 0, 1]);
+    s_env.set(2, bits![0, 0, 1, 0]);
+    s_env.sgt(1, 2, 3);
+    s_env.ugt(1, 2, 4);
+    assert!(s_env.get(3) == bits![0]);
+    assert!(s_env.get(4) == bits![1]);
+  }
 }
