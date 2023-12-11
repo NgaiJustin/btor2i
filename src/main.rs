@@ -12,7 +12,6 @@ use tempfile::NamedTempFile;
 fn main() -> InterpResult<()> {
   let start = Instant::now();
   let args = cli::CLI::parse();
-  println!("{:?}", args.num_repeat);
 
   let btor2_file = match args.file {
     None => {
