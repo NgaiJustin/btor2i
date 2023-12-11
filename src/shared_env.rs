@@ -24,15 +24,16 @@ impl fmt::Display for SharedEnvironment {
       } else {
         if self.offsets[i + 1] - self.offsets[i] > (usize::BITS).try_into().unwrap() {
           writeln!(f, "{} : too large to display", i)?;
+        } else {
+          writeln!(
+            f,
+            "{} : {}",
+            i,
+            SharedEnvironment::slice_to_usize(
+              &self.shared_bits[self.offsets[i]..self.offsets[i + 1]]
+            )
+          )?;
         }
-        writeln!(
-          f,
-          "{} : {}",
-          i,
-          SharedEnvironment::slice_to_usize(
-            &self.shared_bits[self.offsets[i]..self.offsets[i + 1]]
-          )
-        )?;
       }
     }
 
