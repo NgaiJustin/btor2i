@@ -1,5 +1,8 @@
 use num_traits::{One, Zero};
 use std::cmp::Ordering;
+use std::ops::Rem;
+
+use num_integer::Integer;
 
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
@@ -148,6 +151,16 @@ impl SharedEnvironment {
     let mut ans: BigUint = Zero::zero();
     for i in 0..slice.len() {
       ans.set_bit(i.try_into().unwrap(), slice[i])
+    }
+    ans
+  }
+
+  fn slice_to_usize(slice: &BitSlice) -> usize {
+    let mut ans: usize = 0;
+    for i in 0..slice.len() {
+      if slice[i] {
+        ans += 1 << i;
+      }
     }
     ans
   }
@@ -361,22 +374,40 @@ impl SharedEnvironment {
   pub fn smod(&mut self, i1: usize, i2: usize, i3: usize) {
     let a = Self::slice_to_bigint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
     let b = Self::slice_to_bigint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
-    let c = a % b;
+    let c = a.mod_floor(&b);
     for i in self.offsets[i3]..self.offsets[i3 + 1] {
       self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
     }
   }
 
-  pub fn srem(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn srem(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_bigint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_bigint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let mut c = a.mod_floor(&b);
+    if a.sign() != b.sign() && !a.is_zero() && !b.is_zero() {
+      c -= b;
+    }
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
-  pub fn urem(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn urem(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_biguint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_biguint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let c = a.rem(b);
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
-  pub fn sub(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn sub(&mut self, i1: usize, i2: usize, i3: usize) {
+    let a = Self::slice_to_bigint(&self.shared_bits[self.offsets[i1]..self.offsets[i1 + 1]]);
+    let b = Self::slice_to_bigint(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    let c = a - b;
+    for i in self.offsets[i3]..self.offsets[i3 + 1] {
+      self.shared_bits[i..i + 1].fill(c.bit((i - self.offsets[i3]).try_into().unwrap()));
+    }
   }
 
   pub fn saddo(&mut self, _i1: usize, _i2: usize, _i3: usize) {
@@ -411,28 +442,63 @@ impl SharedEnvironment {
     todo!()
   }
 
-  pub fn ite(&mut self, _i1: usize, _i2: usize, _i3: usize, _i4: usize) {
-    todo!()
+  pub fn ite(&mut self, i1: usize, i2: usize, i3: usize, i4: usize) {
+    if (self.shared_bits[self.offsets[i1]]) {
+      self
+        .shared_bits
+        .copy_within(self.offsets[i2]..self.offsets[i2 + 1], self.offsets[i4]);
+    } else {
+      self
+        .shared_bits
+        .copy_within(self.offsets[i3]..self.offsets[i3 + 1], self.offsets[i4]);
+    }
   }
 
-  pub fn rol(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn rol(&mut self, i1: usize, i2: usize, i3: usize) {
+    let shift_amount =
+      Self::slice_to_usize(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    self
+      .shared_bits
+      .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i3]);
+    self.shared_bits[self.offsets[i3]..self.offsets[i3 + 1]].rotate_right(shift_amount);
   }
 
-  pub fn ror(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn ror(&mut self, i1: usize, i2: usize, i3: usize) {
+    let shift_amount =
+      Self::slice_to_usize(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    self
+      .shared_bits
+      .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i3]);
+    self.shared_bits[self.offsets[i3]..self.offsets[i3 + 1]].rotate_left(shift_amount);
   }
 
-  pub fn sll(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn sll(&mut self, i1: usize, i2: usize, i3: usize) {
+    let shift_amount =
+      Self::slice_to_usize(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    self
+      .shared_bits
+      .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i3]);
+    self.shared_bits[self.offsets[i3]..self.offsets[i3 + 1]].shift_right(shift_amount);
   }
 
-  pub fn sra(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn sra(&mut self, i1: usize, i2: usize, i3: usize) {
+    let shift_amount =
+      Self::slice_to_usize(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    self
+      .shared_bits
+      .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i3]);
+    let last_bit = self.shared_bits[self.offsets[i1 + 1] - 1];
+    self.shared_bits[self.offsets[i3]..self.offsets[i3 + 1]].shift_left(shift_amount);
+    self.shared_bits[self.offsets[i3 + 1] - shift_amount..self.offsets[i3 + 1]].fill(last_bit);
   }
 
-  pub fn srl(&mut self, _i1: usize, _i2: usize, _i3: usize) {
-    todo!()
+  pub fn srl(&mut self, i1: usize, i2: usize, i3: usize) {
+    let shift_amount =
+      Self::slice_to_usize(&self.shared_bits[self.offsets[i2]..self.offsets[i2 + 1]]);
+    self
+      .shared_bits
+      .copy_within(self.offsets[i1]..self.offsets[i1 + 1], self.offsets[i3]);
+    self.shared_bits[self.offsets[i3]..self.offsets[i3 + 1]].shift_left(shift_amount);
   }
 }
 
@@ -456,5 +522,41 @@ mod tests {
     assert!(s_env.get(1) == bits![0, 1]);
     assert!(s_env.get(2) == bits![0, 1, 0, 1, 1, 1, 1, 1]);
     assert!(s_env.get(3) == bits![0, 1, 0, 0, 0, 0]);
+  }
+
+  #[test]
+  fn test_shift_left() {
+    let node_widths = vec![2, 8, 6, 8, 8, 8, 8, 8];
+    let mut s_env = SharedEnvironment::new(node_widths);
+    assert!(s_env.get(1) == bits![0, 0]);
+    assert!(s_env.get(2) == bits![0, 0, 0, 0, 0, 0, 0, 0]);
+    assert!(s_env.get(3) == bits![0, 0, 0, 0, 0, 0]);
+    s_env.set(1, bits![0, 1]);
+    s_env.set(2, bits![0, 1, 0, 1, 1, 1, 1, 1]);
+    s_env.set(3, bits![0, 1, 0, 0, 0, 0]);
+
+    s_env.sll(2, 1, 4);
+    s_env.srl(2, 1, 5);
+    s_env.rol(2, 1, 6);
+    s_env.ror(2, 1, 7);
+    s_env.sra(2, 1, 8);
+    assert!(s_env.get(4) == bits![0, 0, 0, 1, 0, 1, 1, 1]);
+    assert!(s_env.get(5) == bits![0, 1, 1, 1, 1, 1, 0, 0]);
+    assert!(s_env.get(6) == bits![1, 1, 0, 1, 0, 1, 1, 1]);
+    assert!(s_env.get(7) == bits![0, 1, 1, 1, 1, 1, 0, 1]);
+    assert!(s_env.get(8) == bits![0, 1, 1, 1, 1, 1, 1, 1]);
+  }
+
+  #[test]
+  fn test_add_mul() {
+    let node_widths = vec![8, 8, 8, 8, 8];
+    let mut s_env = SharedEnvironment::new(node_widths);
+    s_env.set(1, bits![1, 1, 0, 0, 0, 0, 0, 0]);
+    s_env.set(2, bits![1, 1, 1, 0, 0, 0, 0, 0]);
+    s_env.set(3, bits![1, 1, 1, 1, 1, 0, 0, 0]);
+    s_env.add(1, 3, 4);
+    s_env.mul(1, 2, 5);
+    assert!(s_env.get(4) == bits![0, 1, 0, 0, 0, 1, 0, 0]);
+    assert!(s_env.get(5) == bits![1, 0, 1, 0, 1, 0, 0, 0]);
   }
 }
