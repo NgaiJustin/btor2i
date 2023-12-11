@@ -27,6 +27,17 @@ fn main() -> InterpResult<()> {
   let mut parser = Btor2Parser::new();
   let btor2_lines = parser.read_lines(&btor2_file).unwrap().collect::<Vec<_>>();
 
+  // Flag inputs
+  let arg_names = btor2_lines
+    .iter()
+    .filter(|line| matches!(line.tag(), btor2tools::Btor2Tag::Input))
+    .filter_map(|line| {
+      line
+        .symbol()
+        .map(|symbol_cstr| symbol_cstr.to_string_lossy().into_owned())
+    })
+    .collect::<Vec<_>>();
+
   for _ in 0..args.num_repeat {
     // Collect node sorts
     let node_sorts = btor2_lines
@@ -41,11 +52,11 @@ fn main() -> InterpResult<()> {
       .collect::<Vec<_>>();
 
     // Init environment
-    // let mut env = interp::Environment::new(btor2_lines.len() + 1);
-    let mut s_env = shared_env::SharedEnvironment::new(node_sorts);
+    let mut env = interp::Environment::new(btor2_lines.len() + 1);
+    // let mut s_env = shared_env::SharedEnvironment::new(node_sorts);
 
     // Parse inputs
-    match interp::parse_inputs(&mut s_env, &btor2_lines, &args.inputs) {
+    match interp::parse_inputs(&mut env, &btor2_lines, &args.inputs) {
       Ok(()) => {}
       Err(e) => {
         eprintln!("{}", e);
@@ -54,22 +65,22 @@ fn main() -> InterpResult<()> {
     };
 
     // Main interpreter loop
-    interp::interpret(btor2_lines.iter(), &mut s_env)?;
+    interp::interpret(btor2_lines.iter(), &mut env)?;
 
     // Print result of execution
     if !args.profile {
-      println!("{}", s_env);
+      println!("{}", env);
 
-      // Extract outputs
-      btor2_lines.iter().for_each(|line| {
-        if let btor2tools::Btor2Tag::Output = line.tag() {
-          let output_name = line.symbol().unwrap().to_string_lossy().into_owned();
-          let src_node_idx = line.args()[0] as usize;
-          let output_val = s_env.get(src_node_idx);
+      // // Extract outputs
+      // btor2_lines.iter().for_each(|line| {
+      //   if let btor2tools::Btor2Tag::Output = line.tag() {
+      //     let output_name = line.symbol().unwrap().to_string_lossy().into_owned();
+      //     let src_node_idx = line.args()[0] as usize;
+      //     let output_val = s_env.get(src_node_idx);
 
-          println!("{}: {}", output_name, output_val);
-        }
-      });
+      //     println!("{}: {}", output_name, output_val);
+      //   }
+      // });
     }
   }
 

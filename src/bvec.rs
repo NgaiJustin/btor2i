@@ -38,6 +38,14 @@ impl BitVector {
     BitVector { bits }
   }
 
+  pub fn from_bool_vec(v: Vec<bool>) -> Self {
+    let mut bits: BitVec = BitVec::new();
+    for bit in v.iter() {
+      bits.push(*bit);
+    }
+    BitVector { bits }
+  }
+
   pub fn width(&self) -> usize {
     self.bits.len()
   }
