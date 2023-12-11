@@ -446,8 +446,8 @@ impl BitVector {
     for i in 0..bv2.bits.len() {
       bits.push(bv2.bits[i]);
     }
-    let ans = BitVector { bits };
-    ans
+    
+    BitVector { bits }
   }
 
   pub fn ite(cond: &BitVector, bv1: &BitVector, bv2: &BitVector) -> Self {
