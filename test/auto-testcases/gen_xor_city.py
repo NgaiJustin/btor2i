@@ -10,51 +10,51 @@ from random import randint
 6 output 5 out ; core.sv:169.18-169.21
 ; end of yosys output"""
 
-if __name__ == '__main__':
-    starting_lines = [
-        '; many XORs followed by splitting the output into chunks'
-    ] + [f'{i} sort bitvec {16 * (2 ** i)}' for i in range(1, 6)]
-    
+if __name__ == "__main__":
+    starting_lines = ["; many XORs followed by splitting the output into chunks"] + [
+        f"{i} sort bitvec {16 * (2 ** i)}" for i in range(1, 6)
+    ]
+
     arg_lines = []
     for node_id in range(6, 14):
-        arg_lines.append(f'{node_id} input 1 input{node_id - 6}')
-    
+        arg_lines.append(f"{node_id} input 1 input{node_id - 6}")
+
     xor_lines = []
     for node_id in range(14, 30):
-        xor_lines.append(f'{node_id} xor 1 {randint(6, 13)} {randint(6, 13)}')
-    
+        xor_lines.append(f"{node_id} xor 1 {randint(6, 13)} {randint(6, 13)}")
+
     double_xor_lines = []
     for node_id in range(30, 46):
-        double_xor_lines.append(f'{node_id} xor 1 {randint(14, 29)} {randint(14, 29)}')
-    
+        double_xor_lines.append(f"{node_id} xor 1 {randint(14, 29)} {randint(14, 29)}")
+
     concat_lines = []
     for node_id in range(46, 54):
         first = 30 + 2 * (node_id - 46)
         second = first + 1
-        concat_lines.append(f'{node_id} concat 2 {first} {second}')
-    
+        concat_lines.append(f"{node_id} concat 2 {first} {second}")
+
     for node_id in range(54, 58):
         first = 46 + 2 * (node_id - 54)
         second = first + 1
-        concat_lines.append(f'{node_id} concat 3 {first} {second}')
+        concat_lines.append(f"{node_id} concat 3 {first} {second}")
 
     for node_id in range(58, 60):
         first = 54 + 2 * (node_id - 58)
         second = first + 1
-        concat_lines.append(f'{node_id} concat 4 {first} {second}')
-    
-    concat_lines.append('60 concat 5 58 59')
-    
+        concat_lines.append(f"{node_id} concat 4 {first} {second}")
+
+    concat_lines.append("60 concat 5 58 59")
+
     output_lines = []
     curr_node_id = 61
     curr_pos = 0
-    for i in range(2 ** 3):
-        output_lines.append(f'{curr_node_id} slice 1 60 {curr_pos + 31} {curr_pos}')
+    for i in range(2**3):
+        output_lines.append(f"{curr_node_id} slice 1 60 {curr_pos + 31} {curr_pos}")
         curr_pos += 32
         curr_node_id += 1
-    
-    for i in range(2 ** 3):
-        output_lines.append(f'{curr_node_id} output {curr_node_id - 8} output{i}')
+
+    for i in range(2**3):
+        output_lines.append(f"{curr_node_id} output {curr_node_id - 8} output{i}")
         curr_node_id += 1
 
     print("\n".join(starting_lines))
