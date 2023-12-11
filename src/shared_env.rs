@@ -7,7 +7,6 @@ use num_integer::Integer;
 use bitvec::prelude::*;
 use num_bigint::{BigInt, BigUint};
 use std::iter::once;
-use std::mem::size_of;
 
 #[derive(Debug)]
 pub struct SharedEnvironment {
@@ -24,7 +23,7 @@ impl fmt::Display for SharedEnvironment {
       if self.offsets[i] == self.offsets[i+1] {
         writeln!(f, "{} : _", i);
       } else {
-        if self.offsets[i+1] - self.offsets[i] > size_of::<usize>()*8 {
+        if self.offsets[i+1] - self.offsets[i] > (usize::BITS).try_into().unwrap() {
           writeln!(f, "{} : too large to display", i);
         }
         writeln!(f, "{} : {}", i, SharedEnvironment::slice_to_usize(&self.shared_bits[self.offsets[i]..self.offsets[i+1]]));
