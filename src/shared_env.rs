@@ -15,7 +15,7 @@ pub struct SharedEnvironment {
 }
 
 impl SharedEnvironment {
-  fn new(node_sorts: Vec<usize>) -> Self {
+  pub fn new(node_sorts: Vec<usize>) -> Self {
     let offsets = once(&0usize)
       .chain(once(&0usize))
       .chain(node_sorts.iter())
@@ -31,16 +31,19 @@ impl SharedEnvironment {
     }
   }
 
+  /// Sets the bitslice corresponding to the node at with node_id `idx`
   fn set(&mut self, idx: usize, value: &BitSlice) {
     self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]].copy_from_bitslice(value);
   }
 
-  fn set_vec(&mut self, idx: usize, value: Vec<bool>) {
+  /// Sets the bitslice corresponding to the node at with node_id `idx`, used for inputs
+  pub fn set_vec(&mut self, idx: usize, value: Vec<bool>) {
     for i in self.offsets[idx]..self.offsets[idx + 1] {
       self.shared_bits.set(i, value[i - self.offsets[idx]]);
     }
   }
 
+  /// Returns the bitslice corresponding to the node at with node_id `idx`
   fn get(&mut self, idx: usize) -> &BitSlice {
     &self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]]
   }
