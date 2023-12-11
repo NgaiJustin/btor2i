@@ -422,7 +422,7 @@ impl SharedEnvironment {
     todo!()
   }
 
-  pub fn udivo(&mut self, i1: usize, i2: usize, i3: usize) {
+  pub fn udivo(&mut self, _i1: usize, _i2: usize, i3: usize) {
     self.shared_bits[self.offsets[i3]..self.offsets[i3] + 1].fill(false);
   }
 
@@ -443,7 +443,7 @@ impl SharedEnvironment {
   }
 
   pub fn ite(&mut self, i1: usize, i2: usize, i3: usize, i4: usize) {
-    if (self.shared_bits[self.offsets[i1]]) {
+    if self.shared_bits[self.offsets[i1]] {
       self
         .shared_bits
         .copy_within(self.offsets[i2]..self.offsets[i2 + 1], self.offsets[i4]);
