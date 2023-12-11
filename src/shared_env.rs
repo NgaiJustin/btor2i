@@ -35,6 +35,12 @@ impl SharedEnvironment {
     self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]].copy_from_bitslice(value);
   }
 
+  fn set_vec(&mut self, idx: usize, value: Vec<bool>) {
+    for i in self.offsets[idx]..self.offsets[idx + 1] {
+      self.shared_bits.set(i, value[i]);
+    }
+  }
+
   fn get(&mut self, idx: usize) -> &BitSlice {
     &self.shared_bits[self.offsets[idx]..self.offsets[idx + 1]]
   }
