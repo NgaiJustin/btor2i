@@ -30,7 +30,11 @@ fn main() -> InterpResult<()> {
   let arg_names = btor2_lines
     .iter()
     .filter(|line| matches!(line.tag(), btor2tools::Btor2Tag::Input))
-    .filter_map(|line| line.symbol().map(|symbol_cstr| symbol_cstr.to_string_lossy().into_owned())
+    .filter_map(|line| {
+      line
+        .symbol()
+        .map(|symbol_cstr| symbol_cstr.to_string_lossy().into_owned())
+    })
     .collect::<Vec<_>>();
 
   // Init environment
