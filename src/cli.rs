@@ -8,6 +8,14 @@ pub struct CLI {
   #[arg(short, long, action)]
   pub file: Option<String>,
 
+  /// Profile mode
+  #[arg(short, long, default_value = "false")]
+  pub profile: bool,
+
+  /// The number of times to repeat the simulation (used for profiling)
+  #[arg(short, long, default_value = "1")]
+  pub num_repeat: usize,
+
   /// Inputs for the main function
   #[arg(action)]
   pub inputs: Vec<String>,
