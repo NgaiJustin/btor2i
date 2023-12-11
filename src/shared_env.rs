@@ -37,7 +37,7 @@ impl SharedEnvironment {
 
   fn set_vec(&mut self, idx: usize, value: Vec<bool>) {
     for i in self.offsets[idx]..self.offsets[idx + 1] {
-      self.shared_bits.set(i, value[i]);
+      self.shared_bits.set(i, value[i - self.offsets[idx]]);
     }
   }
 
@@ -537,9 +537,9 @@ mod tests {
     assert!(s_env.get(1) == bits![0, 0]);
     assert!(s_env.get(2) == bits![0, 0, 0, 0, 0, 0, 0, 0]);
     assert!(s_env.get(3) == bits![0, 0, 0, 0, 0, 0]);
-    s_env.set(1, bits![0, 1]);
-    s_env.set(2, bits![0, 1, 0, 1, 1, 1, 1, 1]);
-    s_env.set(3, bits![0, 1, 0, 0, 0, 0]);
+    s_env.set_vec(1, vec![false, true]);
+    s_env.set_vec(2, vec![false, true, false, true, true, true, true, true]);
+    s_env.set_vec(3, vec![false, true, false, false, false, false]);
 
     s_env.sll(2, 1, 4);
     s_env.srl(2, 1, 5);
